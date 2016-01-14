@@ -1,5 +1,6 @@
 from decorators import task
 from abc import ABCMeta, abstractmethod, abstractproperty
+from utils import METHOD_GET, METHOD_POST
 
 #The AbstractTask superclass is inheritable for crowdwork implementations.
 #Every AbstractTask has a exec_request() and exec_response() method that mirrors the rendering and validating activities
@@ -13,9 +14,9 @@ class AbstractTask:
         self._crowd_request = crowd_request
 
     def execute(self, *args, **kwargs):
-        if self.get_method() == "GET":
+        if self.get_method() == METHOD_GET:
             return self.exec_request()
-        elif self.get_method() == "POST":
+        elif self.get_method() == METHOD_POST:
             return self.exec_response()
         raise NoTaskFoundError()
 
