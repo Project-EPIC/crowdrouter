@@ -12,6 +12,10 @@ class AbstractWorkFlow:
     _tasks = [] #Must put AbstractTask subclasses inside this list.
 
     @abstractmethod
+    def __init__(self):
+        self._tasks = []
+
+    @abstractmethod
     @workflow
     def run(self, task):
         crowd_response = task.execute() #dynamically call execute() for Task based on parameters.

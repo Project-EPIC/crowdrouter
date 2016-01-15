@@ -46,25 +46,29 @@ class TestTask3(AbstractTask):
         return {"status": "OK", "msg": "TEST [POST]-3"}
 
 class TestWorkFlowSolo(AbstractWorkFlow):
-    _tasks = [TestTask1]
+    def __init__(self):
+        self._tasks = [TestTask1]
     @workflow
     def run(self, task, *args, **kwargs):
         return task.execute(args, kwargs)
 
 class TestWorkFlow1(AbstractWorkFlow):
-    _tasks = [TestTask1, TestTask2]
+    def __init__(self):
+        self._tasks = [TestTask1, TestTask2]
     @workflow
     def run(self, task, *args, **kwargs):
         return task.execute(args, kwargs)
 
 class TestWorkFlow2(AbstractWorkFlow):
-    _tasks = [TestTask2, TestTask3]
+    def __init__(self):
+        self._tasks = [TestTask2, TestTask3]
     @workflow
     def run(self, task, *args, **kwargs):
         return task.execute(args, kwargs)
 
 class TestWorkFlowWithPipeline(AbstractWorkFlow):
-    _tasks = [TestTask1, TestTask2, TestTask3]
+    def __init__(self):
+        self._tasks = [TestTask1, TestTask2, TestTask3]
     @workflow
     def run(self, task, *args, **kwargs):
         if task.get_name() == "TestTask3":
