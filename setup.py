@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
   name = 'crowdrouter',
   packages = ['crowdrouter'], # this must be the same as the name above
-  version = '0.1',
+  version = '0.3',
   description = 'A framework for architecting tasks to the crowd.',
   author = 'Mario Barrenechea',
   author_email = 'mbarrenecheajr@gmail.com',
