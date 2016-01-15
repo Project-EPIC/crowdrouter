@@ -1,7 +1,6 @@
 from workflow.abstract_workflow import AbstractWorkFlow
 from task.abstract_task import AbstractTask
 from crowdrouter.abstract_crowdrouter import AbstractCrowdRouter
-from pipeline.abstract_pipeline import AbstractPipeline
 from crowdresponse import CrowdResponse
 from crowdrequest import CrowdRequest
 from errors import *
