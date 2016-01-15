@@ -17,7 +17,7 @@ There are three components:
 
 Here's a simple CrowdRouter:
 
-```
+```python
 class TestCrowdRouter(AbstractCrowdRouter):
 	def __init__(self):
 		self._workflows = [] #Put in workflow classes here.
@@ -33,7 +33,7 @@ class TestCrowdRouter(AbstractCrowdRouter):
 
 Here's a simple WorkFlow that accepts any request.
 
-```
+```python
 class TestWorkFlow(AbstractWorkFlow):
 	def __init__(self):
 		_tasks = [TestTask1, TestTask2] #Put Task classes here.
@@ -46,7 +46,7 @@ class TestWorkFlow(AbstractWorkFlow):
 
 And here's TestTask1:
 
-```
+```python
 class TestTask1(AbstractTask):
 	def __init__(self, crowd_request):
 		super(TestTask1, self).__init__(crowd_request)
@@ -64,7 +64,7 @@ class TestTask1(AbstractTask):
 
 That's it! Just globally initialize `crowdrouter = TestCrowdRouter()` and you're good to go. Try putting your CrowdRouter instance in various controller actions and re-organize those actions into Task instances:
 
-```
+```python
 def report(request):
 	...
 	crowdrouter.route(request, "TestWorkFlow", "TestTask1")
