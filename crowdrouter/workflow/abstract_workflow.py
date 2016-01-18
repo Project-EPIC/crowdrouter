@@ -1,8 +1,8 @@
-from decorators import workflow
-from task.abstract_task import AbstractTask
 from abc import ABCMeta, abstractmethod, abstractproperty
-from crowdrequest import CrowdRequest
-from utils import METHOD_POST
+from ..task.abstract_task import AbstractTask
+from ..crowdrequest import CrowdRequest
+from ..decorators import workflow
+from ..utils import METHOD_POST
 
 #The AbstractWorkFlow class is a template class that consolidates, orders, and executes
 #its Tasks in a particular way during runtime. Subclasses will extend this base class

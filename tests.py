@@ -1,12 +1,8 @@
-from workflow.abstract_workflow import AbstractWorkFlow
-from task.abstract_task import AbstractTask
-from crowdrouter.abstract_crowdrouter import AbstractCrowdRouter
-from crowdresponse import CrowdResponse
-from crowdrequest import CrowdRequest
-from errors import *
-from decorators import *
-from utils import *
-import inspect, unittest, random
+from crowdrouter import AbstractCrowdRouter, AbstractWorkFlow, AbstractTask
+from crowdrouter.decorators import *
+from crowdrouter.errors import *
+from crowdrouter.utils import *
+import inspect, unittest, random, ipdb
 
 class TestTask1(AbstractTask):
     def __init__(self, crowd_request, *args, **kwargs):

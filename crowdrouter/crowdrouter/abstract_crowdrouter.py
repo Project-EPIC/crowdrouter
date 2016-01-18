@@ -1,7 +1,7 @@
-from workflow.abstract_workflow import AbstractWorkFlow
-from utils import print_msg
 from abc import ABCMeta, abstractmethod, abstractproperty
-from decorators import crowdrouter
+from ..workflow.abstract_workflow import AbstractWorkFlow
+from ..utils import print_msg
+from ..decorators import crowdrouter
 
 #CrowdRouter is a manager class that composes the workflow object to perform crowd tasks.
 #It relies upon the workflow to manage and execute them, while it solely manages the
@@ -9,7 +9,7 @@ from decorators import crowdrouter
 #class that handles its own call() method to implement pre and post conditions.
 class AbstractCrowdRouter:
     __metaclass__ = ABCMeta
-    
+
     #Implement any/all of these attributes in your concrete class.
     _workflows = [] #Put WorkFlow classes here.
     _num_allowable_requests = None #Cap off allowable requests for crowdwork tasking.

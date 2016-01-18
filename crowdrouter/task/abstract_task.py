@@ -1,6 +1,6 @@
-from decorators import task
 from abc import ABCMeta, abstractmethod, abstractproperty
-from utils import METHOD_GET, METHOD_POST
+from ..decorators import task
+from ..utils import METHOD_GET, METHOD_POST
 
 #The AbstractTask superclass is inheritable for crowdwork implementations.
 #Every AbstractTask has a exec_request() and exec_response() method that mirrors the rendering and validating activities
