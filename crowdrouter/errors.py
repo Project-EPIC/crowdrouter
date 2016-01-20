@@ -1,3 +1,17 @@
+class NoRequestFoundError(Exception):
+    def __init__(self, value=None):
+        if value:
+            self.value = value
+        else:
+            self.value = "No Request was found. CrowdRouter must have a request+session object in order to function properly."
+
+class NoSessionFoundError(Exception):
+    def __init__(self, value=None):
+        if value:
+            self.value = value
+        else:
+            self.value = "No Session was found. CrowdRouter must have a request+session object in order to function properly."
+            
 class NoTaskFoundError(Exception):
     def __init__(self, value=None):
         if value:

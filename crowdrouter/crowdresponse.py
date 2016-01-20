@@ -1,11 +1,16 @@
 class CrowdResponse:
+    _crowd_request = None
     _response = None
     _task = None
 
     def __init__(self, response, task):
         self._response = response
         self._task = task
+        self._crowd_request = task.get_crowd_request()
 
+    def get_crowd_request(self):
+        return self._crowd_request
+        
     def get_response(self):
         return self._response
 

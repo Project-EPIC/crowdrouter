@@ -1,0 +1,23 @@
+{% extends 'home.html' %}
+{% block title %}<title>SimpleCrowdRouter - Ranking Disaster Images</title>{% endblock title %}
+
+{% block body %}
+  <h1>Ranking Disaster Images</h1>
+  <h4>A disaster image is shown below. Please rate it 1-5 stars based upon your assessment of damages.</h4>
+  <div id='task'>
+    <div id="disaster-image" style="margin: 20px auto;">
+      <img src="/static/images/{{ response.img }}" style="height:400px;">
+    </div>
+    <form method="POST" action="/task/{{ task.id }}/submit">
+      <input type="radio" name="rating" value="0" checked> None
+      <input id="ranking-images-button" type="radio" name="rating" value="1"> Light
+      <input id="ranking-images-button" type="radio" name="rating" value="2"> Moderate
+      <input id="ranking-images-button" type="radio" name="rating" value="3"> Heavy
+      <input id="ranking-images-button" type="radio" name="rating" value="4"> Severe/Catastrophic
+      <input type="hidden" name="image-filename" value="{{ response.img }}">
+      <hr/>
+      <a href="/" class="btn btn-default bg-gray" value="Go Back">Go Back</a>
+      <input class="btn btn-primary mb1 bg-blue" type="submit" value="Submit" style="margin:10px;">
+    </form>
+  </div>
+{% endblock body %}

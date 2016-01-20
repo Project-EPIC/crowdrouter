@@ -1,10 +1,42 @@
-<html>
-<head>
-</head>
+<!doctype html>
+  <head>
+    {% block title %}<title>SimpleCrowdRouter</title>{% endblock title %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/basscss.min.css')}}" type="text/css"></link>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css')}}" type="text/css"></link>
+  </head>
 
-<body>
-    <h1> Welcome to the Dummy CrowdRouter Example! </h1>
-    <h4> We hope you enjoy your stay.</h4>
-</body>
+  <body style="padding:20px;">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          {% if category == 'success' %}
+            <div class="bold center p2 white bg-green rounded"> {{ message }}</div>
+          {% else %}
+            <div class="bold center p2 mb2 white bg-red rounded"> {{ message }}</div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
 
+    {% block body %}
+      <h1> Welcome to the SimpleCrowdRouter Example! </h1>
+      <h4> We hope you enjoy your stay.</h4>
+      <table class="table-light overflow-hidden bg-white rounded" style="margin:10px; width:900px;">
+        <thead class="bg-darken-1">
+          <th>Name</th>
+          <th>Description</th>
+          <th>Date</th>
+        </thead>
+        <tbody>
+          {% for task in tasks %}
+          <tr>
+            <td><a href="/task/{{ task.id }}">{{ task.name }}</a></td>
+            <td>{{ task.description }}</td>
+            <td>{{ task.date_created_at }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endblock body %}
+  </body>
 </html>

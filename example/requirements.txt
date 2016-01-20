@@ -1,2 +1,3 @@
 crowdrouter
 flask
+peewee
