@@ -1,61 +1,72 @@
 from utils import METHOD_GET
-from errors import NoRequestFoundError, NoSessionFoundError
+from errors import NoRequestFoundError, NoSessionFoundError, InvalidRequestError, InvalidSessionError
 import ipdb
 
 class CrowdRequest:
-    _workflow_name = None
-    _task_name = None
-    _request = None
-    _session = None
+    workflow_name = None
+    task_name = None
+    session = None
+    method = None
+    path = None
 
     def __init__(self, workflow_name, task_name, request):
-        self._workflow_name = workflow_name
-        self._task_name = task_name
-        self._request = self.bind_request(request)
-        self._session = self.bind_session(request)
+        self.workflow_name = workflow_name
+        self.task_name = task_name
+        self.bind_session(request)
+        self.bind_request(request)
 
     #Hunt down the request object.
-    def bind_request(self, request):
-        if hasattr(request, "method"):
+    @staticmethod
+    def find_request(request):
+        if isinstance(request, CrowdRequest):
+            return request
+        if hasattr(request, "method") and request.method != None:
             return request
         if isinstance(request, dict) and request.has_key("method"):
             return request
         if isinstance(request, dict) and request.has_key("request"):
-            return self.bind_request(request["request"])
-        raise NoRequestFoundError()
+            return CrowdRequest.find_request(request["request"])
+        raise NoRequestFoundError
 
     #Hunt down the session object.
-    def bind_session(self, request):
-        if hasattr(request, "session"):
+    @staticmethod
+    def find_session(request):
+        if hasattr(request, "session") and request.session != None:
             return request.session
         if isinstance(request, dict) and request.has_key("session"):
             return request['session']
-        raise NoSessionFoundError()
+        raise NoSessionFoundError
 
-    def get_workflow_name(self):
-        return self._workflow_name
+    #Bind Request parameters to CrowdRequest.
+    def bind_request(self, request):
+        #If prev_response exists, bind it for client-tracking.
+        if isinstance(request, dict) and request.has_key("prev_response"):
+            self.prev_response = request["prev_response"]
 
-    def get_task_name(self):
-        return self._task_name
+        request = CrowdRequest.find_request(request)
+        if hasattr(request, "method") and hasattr(request, "path"):
+            self.method = request.method
+            self.path = request.path
+        else:
+            raise InvalidRequestError
 
-    def get_request(self):
-        return self._request
-
-    def get_session(self):
-        return self._session
-
-    def get_method(self):
-        return self._request.get("method")
+    #Bind the session object to CrowdRequest.
+    def bind_session(self, request):
+        session = CrowdRequest.find_session(request)
+        if hasattr(session, "update") and hasattr(session, "keys"):
+            self.session = session
+        else:
+            raise InvalidSessionError
 
     @staticmethod
-    def response_to_request(crowd_response, workflow_name, next_task_name):
-        request = crowd_response.get_crowd_request().get_request()
-        request["method"] = "GET"
+    def to_crowd_request(crowd_response, workflow_name, next_task_name):
+        crowd_request = crowd_response.crowd_request
+        crowd_request.method = "GET"
         return CrowdRequest(workflow_name, next_task_name, {
-            "request": request,
-            "session": crowd_response.get_crowd_request().get_session(),
-            "prev_response": crowd_response.get_response()
+            "request": crowd_request,
+            "session": crowd_request.session,
+            "prev_response": crowd_response.response
         })
 
     def __repr__(self):
-        return "<CrowdRequest: %s - %s>" % (self.get_task_name(), self.get_method())
+        return "<CrowdRequest: %s - %s>" % (self.task_name, self.method)
