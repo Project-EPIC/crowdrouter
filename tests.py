@@ -100,10 +100,14 @@ class MockRequest:
     method = None
     session = None
     path = None
+    data = None
+    form = None
 
-    def __init__(self, method, response=None):
+    def __init__(self, method, response=None, data=None, form=None):
         self.method = method
         self.path = "/" #Doesn't matter.
+        self.data = data
+        self.form = form
         if response:
             self.session = response.crowd_request.session
         else:
@@ -164,6 +168,18 @@ class Testing(unittest.TestCase):
             self.cr.route("TestWorkFlowSolo", "TestTask1", mock_request)
         except NoRequestFoundError:
             pass
+
+    def test_send_request_data(self):
+        self.cr.workflows = [TestWorkFlowSolo]
+        test_data = {"test":1}
+        response = self.cr.route("TestWorkFlowSolo", "TestTask1", MockRequest("GET", response=None, data=test_data))
+        self.assertEquals(response.crowd_request.data, test_data)
+
+    def test_send_request_form_data(self):
+        self.cr.workflows = [TestWorkFlowSolo]
+        test_data = {"test":1}
+        response = self.cr.route("TestWorkFlowSolo", "TestTask1", MockRequest("POST", response=None, data=None, form=test_data))
+        self.assertEquals(response.crowd_request.form, test_data)
 
     def test_success_tally_task_executions(self):
         self.cr.workflows = [TestWorkFlow1]

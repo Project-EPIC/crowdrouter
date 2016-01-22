@@ -1,7 +1,7 @@
 from errors import ImproperResponseError
 import ipdb
 
-class CrowdResponse:
+class CrowdResponse(object):
     crowd_request = None
     status = None
     task = None
