@@ -3,12 +3,12 @@
 
 {% block body %}
   <h1>Ranking Disaster Images</h1>
-  <h4>A disaster image is shown below. Please rate it 1-5 stars based upon your assessment of damages.</h4>
+  <h4>A disaster image is shown below. Please make an appropriate selection based upon your assessment of damages.</h4>
   <div id='task'>
     <div id="disaster-image" style="margin: 20px auto;">
       <img src="/static/images/{{ response.img }}" style="height:400px;">
     </div>
-    <form method="POST" action="/task/{{ task.id }}/submit">
+    <form method="POST" action="/workflow/{{ workflow.id }}/RankingImageTask">
       <input type="radio" name="rating" value="0" checked> None
       <input id="ranking-images-button" type="radio" name="rating" value="1"> Light
       <input id="ranking-images-button" type="radio" name="rating" value="2"> Moderate

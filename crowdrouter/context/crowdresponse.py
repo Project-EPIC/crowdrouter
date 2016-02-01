@@ -1,4 +1,4 @@
-from errors import ImproperResponseError
+from ..errors import ImproperResponseError
 import ipdb
 
 class CrowdResponse(object):
@@ -6,6 +6,7 @@ class CrowdResponse(object):
     status = None
     task = None
     response = None
+    path = None
 
     def __init__(self, response, task):
         try:
@@ -13,8 +14,9 @@ class CrowdResponse(object):
             self.crowd_request = task.crowd_request
             self.response = response
             self.status = response["status"]
+            self.path = response["path"]
         except:
-            raise ImproperResponseError
+            raise ImproperResponseError(value="Required parameter not found. Ensure that CrowdResponse contains both 'status' and 'path'.")
 
     def __repr__(self):
-        return "<CrowdResponse: %s-%s-%s>" % (self.task.name, self.crowd_request.method, self.status)
+        return "<CrowdResponse: %s-%s-%s>" % (self.task.get_name(), self.crowd_request.get_method(), self.status)

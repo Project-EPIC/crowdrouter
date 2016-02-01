@@ -20,23 +20,45 @@
 
     {% block body %}
       <h1> Welcome to the SimpleCrowdRouter Example! </h1>
-      <h4> We hope you enjoy your stay.</h4>
-      <table class="table-light overflow-hidden bg-white rounded" style="margin:10px; width:900px;">
-        <thead class="bg-darken-1">
-          <th>Name</th>
-          <th>Description</th>
-          <th>Date</th>
-        </thead>
-        <tbody>
-          {% for task in tasks %}
-          <tr>
-            <td><a href="/task/{{ task.id }}">{{ task.name }}</a></td>
-            <td>{{ task.description }}</td>
-            <td>{{ task.date_created_at }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <h3> Choose a Task to get started, or login below.</h3>
+
+    {% if not user %}
+      <form method="POST" action="/login" style="padding:10px; border:2px solid lightgray; border-radius:2px; width:300px;">
+        <input type="text" name="username" placeholder="Username..." style="width:250px; margin:5px;"/>
+        <input type="password" name="password" placeholder="Password..." style="width:250px; margin:5px;"/>
+        <hr/>
+        <input class="btn btn-primary mb1 bg-blue" type="submit" value="Login" style="margin:10px;">
+      </form>
+    {% else %}
+      <form method="POST" action="/logout">
+        <input class="btn btn-primary mb1 bg" type="submit" value="Logout" style="margin:10px;">
+      </form>
+    {% endif %}
+
+      {% for workflow in workflows %}
+        <br/>
+        <h4>{{ workflow.name }}</h4>
+        <table class="table-light overflow-hidden bg-white rounded" style="margin:10px; width:1000px;">
+          <thead class="bg-darken-1">
+            <th style="width:200px;">Name</th>
+            <th style="width:400px;">Description</th>
+            <th>Date</th>
+          </thead>
+          <tbody>
+            {% for task in workflow.task_set %}
+              <tr>
+                {% if task.task_name == "RankingImageTask" %}
+                  <td><a href="/workflow/{{ workflow.id }}/RankingImageTask">{{ task.name }}</a></td>
+                {% else %}
+                  <td><a href="/workflow/{{ workflow.id }}/AnswerQuestionsTask">{{ task.name }}</a></td>
+                {% endif %}
+                  <td>{{ task.description }}</td>
+                  <td>{{ task.date_created_at }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endfor %}
     {% endblock body %}
   </body>
 </html>

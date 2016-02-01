@@ -1,0 +1,20 @@
+{% extends 'home.html' %}
+{% block title %}<title>SimpleCrowdRouter - Answer Questions</title>{% endblock title %}
+
+{% block body %}
+  <h1>Answer Questions</h1>
+  <h4>Please answer the questions based on the image shown.</h4>
+  <div id='task'>
+    <div id="disaster-image" style="margin: 20px auto;">
+      <img src="/static/images/{{ response.img }}" style="height:400px;">
+    </div>
+    <form method="POST" action="/workflow/{{ workflow.id }}/AnswerQuestionsTask">
+      <legend> What is shown in this image? </legend>
+      <input name="answer" type="text" width="400">
+      <input type="hidden" name="image-filename" value="{{ response.img }}">
+      <hr/>
+      <a href="/" class="btn btn-default bg-gray" value="Go Back">Go Back</a>
+      <input class="btn btn-primary mb1 bg-blue" type="submit" value="Submit" style="margin:10px;">
+    </form>
+  </div>
+{% endblock body %}

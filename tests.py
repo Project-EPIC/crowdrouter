@@ -1,117 +1,10 @@
 from crowdrouter import AbstractCrowdRouter, AbstractWorkFlow, AbstractTask
+from crowdrouter.workflow.abstract_workflow import SESSION_DATA_KEY, SESSION_PIPELINE_KEY
 from crowdrouter.decorators import *
 from crowdrouter.errors import *
 from crowdrouter.utils import *
-import inspect, unittest, random, ipdb, requests
-
-class TestTask1(AbstractTask):
-    def __init__(self, crowd_request):
-        self.crowd_request = crowd_request
-    @task
-    def exec_request(self):
-        print_msg("TEST [GET]-1")
-        return {"status": "OK", "msg": "TEST [GET]"}
-    @task
-    def exec_response(self):
-        print_msg("TEST [POST]-1")
-        return {"status": "OK", "msg": "TEST [POST]"}
-
-class TestTask2(AbstractTask):
-    def __init__(self, crowd_request):
-        self.crowd_request = crowd_request
-    @task
-    def exec_request(self):
-        print_msg("TEST [GET]-2")
-        return {"status": "OK", "msg": "TEST [GET]-2"}
-    @task
-    def exec_response(self):
-        print_msg("TEST [POST]-2")
-        return {"status": "OK", "msg": "TEST [POST]-2"}
-
-class TestTask3(AbstractTask):
-    def __init__(self, crowd_request):
-        self.crowd_request = crowd_request
-    @task
-    def exec_request(self):
-        print_msg("TEST [GET]-3")
-        return {"status": "OK", "msg": "TEST [GET]-3"}
-    @task
-    def exec_response(self):
-        print_msg("TEST [POST]-3")
-        return {"status": "OK", "msg": "TEST [POST]-3"}
-
-class TestWorkFlowSolo(AbstractWorkFlow):
-    def __init__(self):
-        self.tasks = [TestTask1]
-    @workflow
-    def run(self, task):
-        return task.execute()
-
-class TestWorkFlow1(AbstractWorkFlow):
-    def __init__(self):
-        self.tasks = [TestTask1, TestTask2]
-    @workflow
-    def run(self, task):
-        return task.execute()
-
-class TestWorkFlow2(AbstractWorkFlow):
-    def __init__(self):
-        self.tasks = [TestTask2, TestTask3]
-    @workflow
-    def run(self, task):
-        return task.execute()
-
-class TestWorkFlowWithPipeline(AbstractWorkFlow):
-    def __init__(self):
-        self.tasks = [TestTask1, TestTask2, TestTask3]
-    @workflow
-    def run(self, task):
-        if task.get_name() == "TestTask3":
-            return task.execute()
-        else:
-            return self.pipeline(task, [TestTask1, TestTask2])
-
-class TestWorkFlowPipelineWithIdenticalTasks(AbstractWorkFlow):
-    def __init__(self):
-        self.tasks = [TestTask1, TestTask1, TestTask1]
-    @workflow
-    def run(self, task):
-        return self.pipeline(task, [TestTask1, TestTask1, TestTask1])
-
-class TestWorkFlowPipelineRepeat(AbstractWorkFlow):
-    def __init__(self):
-        self.tasks = [TestTask1, TestTask1, TestTask1]
-    @workflow
-    def run(self, task):
-        return self.repeat(task, 3)
-
-class TestCrowdRouter(AbstractCrowdRouter):
-    def __init__(self):
-        self.workflows = []
-        self.task_counts = {}
-
-    @crowdrouter
-    def route(self, crowd_request, workflow):
-        crowd_response = workflow.run(crowd_request)
-        self.update_task_count(workflow, crowd_response.task.get_name())
-        return crowd_response
-
-class MockRequest:
-    method = None
-    session = None
-    path = None
-    data = None
-    form = None
-
-    def __init__(self, method, response=None, data=None, form=None):
-        self.method = method
-        self.path = "/" #Doesn't matter.
-        self.data = data
-        self.form = form
-        if response:
-            self.session = response.crowd_request.session
-        else:
-            self.session = {}
+from test_classes import *
+import inspect, unittest, random, ipdb
 
 class Testing(unittest.TestCase):
     def setUp(self):
@@ -120,7 +13,7 @@ class Testing(unittest.TestCase):
     def test_fail_create_crowdrouter(self):
         try:
             cr = AbstractCrowdRouter()
-        except TypeError:
+        except TypeError as e:
             pass
 
     def test_success_create_crowdrouter(self):
@@ -130,69 +23,101 @@ class Testing(unittest.TestCase):
     def test_fail_run_workflow(self):
         try:
             self.cr.workflows = [TestWorkFlowSolo]
-            self.cr.route("NONEXISTENT WORKFLOW", "NONEXISTENT TASK", MockRequest("GET"))
-        except NoWorkFlowFoundError:
+            self.cr.route("NONEXISTENT WORKFLOW", "NONEXISTENT TASK", MockRequest("GET", "/"))
+        except NoWorkFlowFoundError as e:
             pass
 
     def test_fail_run_workflow_task(self):
         try:
             self.cr.workflows = [TestWorkFlowSolo]
-            self.cr.route("TestWorkFlowSolo", "NONEXISTENT TASK", MockRequest("GET"))
-        except NoTaskFoundError:
+            self.cr.route("TestWorkFlowSolo", "NONEXISTENT TASK", MockRequest("GET", "/TestTask1"))
+        except NoTaskFoundError as e:
             pass
 
     def test_success_run_workflow_task_get(self):
         self.cr.workflows = [TestWorkFlowSolo]
-        response = self.cr.route("TestWorkFlowSolo", "TestTask1", MockRequest("GET"))
+        response = self.cr.route("TestWorkFlowSolo", "TestTask1", MockRequest("GET", "/TestTask1"))
         self.assertTrue(isinstance(response, CrowdResponse))
+
+    def test_fail_run_workflow_task_get_wrong_uri(self):
+        self.cr.workflows = [TestWorkFlowSolo]
+        try:
+            response = self.cr.route("TestWorkFlowSolo", "TestTask1", MockRequest("GET", "/WRONG_URI"))
+        except TaskError as e:
+            pass
 
     def test_success_run_workflow_task_post(self):
         self.cr.workflows = [TestWorkFlowSolo]
-        response = self.cr.route("TestWorkFlowSolo", "TestTask1", MockRequest("POST"))
+        response = self.cr.route("TestWorkFlowSolo", "TestTask1", MockRequest("POST", "/TestTask1"))
         self.assertTrue(isinstance(response, CrowdResponse))
+
+    def test_switch_workflows(self):
+        self.cr.workflows = [TestWorkFlow1]
+        response = self.cr.route("TestWorkFlow1", "TestTask1", MockRequest("POST", "/TestTask1"))
+        self.assertTrue(response.status == "OK")
+        self.cr.workflows = [TestWorkFlow2]
+        response = self.cr.route("TestWorkFlow2", "TestTask2", MockRequest("POST", "/TestTask2"))
+        self.assertTrue(response.status == "OK")
+
+    def test_switch_workflows_wrong_task(self):
+        self.cr.workflows = [TestWorkFlow1]
+        response = self.cr.route("TestWorkFlow1", "TestTask1", MockRequest("POST", "/TestTask1"))
+        self.cr.workflows = [TestWorkFlow2]
+        try:
+            response = self.cr.route("TestWorkFlow2", "TestTask1", MockRequest("POST", "/TestTask1"))
+        except NoTaskFoundError as e:
+            pass
+
+    def test_execute_task_multiple_workflows(self):
+        self.cr.workflows = [TestWorkFlow1, TestWorkFlow2]
+        response = self.cr.route("TestWorkFlow1", "TestTask2", MockRequest("POST", "/TestTask2"))
+        self.assertTrue(response.crowd_request.workflow_name == "TestWorkFlow1")
+        response = self.cr.route("TestWorkFlow2", "TestTask2", MockRequest("POST", "/TestTask2"))
+        self.assertTrue(response.crowd_request.workflow_name == "TestWorkFlow2")
 
     def test_send_request_no_session(self):
         self.cr.workflows = [TestWorkFlowSolo]
         try:
-            mock_request = MockRequest("GET")
+            mock_request = MockRequest("GET", "/TestTask1")
             mock_request.session = None
             self.cr.route("TestWorkFlowSolo", "TestTask1", mock_request)
-        except NoSessionFoundError:
+        except NoSessionFoundError as e:
             pass
 
     def test_send_request_no_method(self):
         self.cr.workflows = [TestWorkFlowSolo]
         try:
-            mock_request = MockRequest("GET")
+            mock_request = MockRequest("GET", "/TestTask1")
             mock_request.method = None
             self.cr.route("TestWorkFlowSolo", "TestTask1", mock_request)
-        except NoRequestFoundError:
+        except InvalidRequestError as e:
             pass
 
     def test_send_request_data(self):
         self.cr.workflows = [TestWorkFlowSolo]
         test_data = {"test":1}
-        response = self.cr.route("TestWorkFlowSolo", "TestTask1", MockRequest("GET", response=None, data=test_data))
-        self.assertEquals(response.crowd_request.data, test_data)
+        response = self.cr.route("TestWorkFlowSolo", "TestTask1", MockRequest("GET", "/TestTask1", data=test_data))
+        self.assertEquals(response.crowd_request.get_data(), test_data)
 
     def test_send_request_form_data(self):
         self.cr.workflows = [TestWorkFlowSolo]
         test_data = {"test":1}
-        response = self.cr.route("TestWorkFlowSolo", "TestTask1", MockRequest("POST", response=None, data=None, form=test_data))
-        self.assertEquals(response.crowd_request.form, test_data)
+        response = self.cr.route("TestWorkFlowSolo", "TestTask1", MockRequest("POST", "/TestTask1", form=test_data))
+        self.assertEquals(response.crowd_request.get_form(), test_data)
 
     def test_success_tally_task_executions(self):
         self.cr.workflows = [TestWorkFlow1]
         rand_count = random.randint(1, 10)
         for i in range(0, rand_count):
-            self.cr.route("TestWorkFlow1", "TestTask1", MockRequest("GET"))
+            self.cr.route("TestWorkFlow1", "TestTask1", MockRequest("GET", "/TestTask1"))
         self.assertEquals(self.cr.task_counts["TestWorkFlow1"]["TestTask1"], rand_count)
 
     def test_success_tally_multiple_task_executions(self):
         self.cr.workflows = [TestWorkFlow1]
         rand_count = random.randint(1, 10)
         for i in range(0, rand_count):
-            response = self.cr.route("TestWorkFlow1", random.choice(["TestTask1", "TestTask2"]), MockRequest(random.choice(["GET", "POST"])))
+            task = random.choice(["TestTask1", "TestTask2"])
+            response = self.cr.route("TestWorkFlow1", task, MockRequest(random.choice(["GET", "POST"]), "/%s" % task))
 
         self.assertTrue(self.cr.task_counts["TestWorkFlow1"]["TestTask1"] <= rand_count)
         self.assertTrue(self.cr.task_counts["TestWorkFlow1"]["TestTask2"] <= rand_count)
@@ -200,82 +125,229 @@ class Testing(unittest.TestCase):
 
     def test_pipeline_tasks1(self):
         self.cr.workflows = [TestWorkFlowWithPipeline]
-        response = self.cr.route("TestWorkFlowWithPipeline", "TestTask1", MockRequest("GET"))
+        response = self.cr.route("TestWorkFlowWithPipeline", "TestTask1", MockRequest("GET", "/TestTask1"))
         self.assertTrue(response.status == "OK")
         self.assertTrue(response.task.get_name() == "TestTask1")
-        self.assertTrue(response.crowd_request.method == "GET")
+        self.assertTrue(response.crowd_request.get_method() == "GET")
 
-        response = self.cr.route("TestWorkFlowWithPipeline", "TestTask1", MockRequest("POST", response=response))
+        response = self.cr.route("TestWorkFlowWithPipeline", "TestTask1", MockRequest("POST", "/TestTask1", crowd_response=response))
         self.assertTrue(response.status == "OK")
         self.assertTrue(response.task.get_name() == "TestTask2")
-        self.assertTrue(response.crowd_request.method == "GET")
+        self.assertTrue(response.crowd_request.get_method() == "GET")
 
-        response = self.cr.route("TestWorkFlowWithPipeline", "TestTask2", MockRequest("POST", response=response))
+        response = self.cr.route("TestWorkFlowWithPipeline", "TestTask2", MockRequest("POST", "/TestTask2", crowd_response=response))
         self.assertTrue(response.status == "OK")
         self.assertTrue(response.task.get_name() == "TestTask2")
-        self.assertTrue(response.crowd_request.method == "POST")
+        self.assertTrue(response.crowd_request.get_method() == "POST")
 
     def test_pipeline_tasks2(self):
         self.cr.workflows = [TestWorkFlowWithPipeline]
-        response = self.cr.route("TestWorkFlowWithPipeline", "TestTask3", MockRequest("GET"))
+        response = self.cr.route("TestWorkFlowWithPipeline", "TestTask3", MockRequest("GET", "/TestTask3"))
         self.assertTrue(response.status == "OK")
         self.assertTrue(response.task.get_name() == "TestTask3")
-        self.assertTrue(response.crowd_request.method == "GET")
+        self.assertTrue(response.crowd_request.get_method() == "GET")
 
-        response = self.cr.route("TestWorkFlowWithPipeline", "TestTask2", MockRequest("GET", response=response))
-        self.assertTrue(response.task.get_name() == "TestTask2")
-        self.assertTrue(response.crowd_request.method == "GET")
+        response = self.cr.route("TestWorkFlowWithPipeline", "TestTask1", MockRequest("GET", "/TestTask1", crowd_response=response))
+        self.assertTrue(response.task.get_name() == "TestTask1")
+        self.assertTrue(response.crowd_request.get_method() == "GET")
 
-        response = self.cr.route("TestWorkFlowWithPipeline", "TestTask2", MockRequest("POST", response=response))
+        response = self.cr.route("TestWorkFlowWithPipeline", "TestTask1", MockRequest("POST", "/TestTask1", crowd_response=response))
         self.assertTrue(response.task.get_name() == "TestTask2")
-        self.assertTrue(response.crowd_request.method == "POST")
+        self.assertTrue(response.crowd_request.get_method() == "GET")
 
     def test_pipeline_identical_tasks(self):
-        self.cr.workflows = [TestWorkFlowPipelineWithIdenticalTasks]
-        response = self.cr.route("TestWorkFlowPipelineWithIdenticalTasks", "TestTask1", MockRequest("GET"))
+        self.cr.workflows = [TestWorkFlowPipelineIdenticalTasks]
+        response = self.cr.route("TestWorkFlowPipelineIdenticalTasks", "TestTask1", MockRequest("GET", "/TestTask1"))
         self.assertTrue(response.status == "OK")
         self.assertTrue(response.task.get_name() == "TestTask1")
-        self.assertTrue(response.crowd_request.method == "GET")
+        self.assertTrue(response.crowd_request.get_method() == "GET")
 
-        response = self.cr.route("TestWorkFlowPipelineWithIdenticalTasks", "TestTask1", MockRequest("POST", response=response))
+        response = self.cr.route("TestWorkFlowPipelineIdenticalTasks", "TestTask1", MockRequest("POST", "/TestTask1", crowd_response=response))
         self.assertTrue(response.status == "OK")
         self.assertTrue(response.task.get_name() == "TestTask1")
-        self.assertTrue(response.crowd_request.method == "GET")
-        self.assertTrue(hasattr(response.crowd_request, "prev_response"))
+        self.assertTrue(response.crowd_request.get_method() == "GET")
+        self.assertTrue(hasattr(response.crowd_request, "previous_response"))
 
-        response = self.cr.route("TestWorkFlowPipelineWithIdenticalTasks", "TestTask1", MockRequest("POST", response=response))
+        response = self.cr.route("TestWorkFlowPipelineIdenticalTasks", "TestTask1", MockRequest("POST", "/TestTask1", crowd_response=response))
         self.assertTrue(response.status == "OK")
         self.assertTrue(response.task.get_name() == "TestTask1")
-        self.assertTrue(response.crowd_request.method == "GET")
-        self.assertTrue(hasattr(response.crowd_request, "prev_response"))
+        self.assertTrue(response.crowd_request.get_method() == "GET")
+        self.assertTrue(hasattr(response.crowd_request, "previous_response"))
 
-        response = self.cr.route("TestWorkFlowPipelineWithIdenticalTasks", "TestTask1", MockRequest("POST", response=response))
+        response = self.cr.route("TestWorkFlowPipelineIdenticalTasks", "TestTask1", MockRequest("POST", "/TestTask1", crowd_response=response))
         self.assertTrue(response.status == "OK")
         self.assertTrue(response.task.get_name() == "TestTask1")
-        self.assertTrue(response.crowd_request.method == "POST")
+        self.assertTrue(response.crowd_request.get_method() == "POST")
 
     def test_pipeline_repeat(self):
         self.cr.workflows = [TestWorkFlowPipelineRepeat]
-        response = self.cr.route("TestWorkFlowPipelineRepeat", "TestTask1", MockRequest("GET"))
+        response = self.cr.route("TestWorkFlowPipelineRepeat", "TestTask1", MockRequest("GET", "/TestTask1"))
         self.assertTrue(response.status == "OK")
         self.assertTrue(response.task.get_name() == "TestTask1")
-        self.assertTrue(response.crowd_request.method == "GET")
+        self.assertTrue(response.crowd_request.get_method() == "GET")
 
-        response = self.cr.route("TestWorkFlowPipelineRepeat", "TestTask1", MockRequest("POST", response=response))
+        response = self.cr.route("TestWorkFlowPipelineRepeat", "TestTask1", MockRequest("POST", "/TestTask1", crowd_response=response))
         self.assertTrue(response.status == "OK")
         self.assertTrue(response.task.get_name() == "TestTask1")
-        self.assertTrue(response.crowd_request.method == "GET")
+        self.assertTrue(response.crowd_request.get_method() == "GET")
 
-        response = self.cr.route("TestWorkFlowPipelineRepeat", "TestTask1", MockRequest("POST", response=response))
+        response = self.cr.route("TestWorkFlowPipelineRepeat", "TestTask1", MockRequest("POST", "/TestTask1", crowd_response=response))
         self.assertTrue(response.status == "OK")
         self.assertTrue(response.task.get_name() == "TestTask1")
-        self.assertTrue(response.crowd_request.method == "GET")
-        self.assertTrue(hasattr(response.crowd_request, "prev_response"))
+        self.assertTrue(response.crowd_request.get_method() == "GET")
+        self.assertTrue(hasattr(response.crowd_request, "previous_response"))
 
-        response = self.cr.route("TestWorkFlowPipelineRepeat", "TestTask1", MockRequest("POST", response=response))
+        response = self.cr.route("TestWorkFlowPipelineRepeat", "TestTask1", MockRequest("POST", "/TestTask1", crowd_response=response))
         self.assertTrue(response.status == "OK")
         self.assertTrue(response.task.get_name() == "TestTask1")
-        self.assertTrue(response.crowd_request.method == "POST")
+        self.assertTrue(response.crowd_request.get_method() == "POST")
+
+    def test_pre_pipeline(self):
+        self.cr.workflows = [TestWorkFlowPipeline]
+        response = self.cr.route("TestWorkFlowPipeline", "TestTask1", MockRequest("GET", "/TestTask1"))
+        self.assertTrue(response.crowd_request.get_session().has_key(SESSION_DATA_KEY))
+
+    def test_step_pipeline(self):
+        self.cr.workflows = [TestWorkFlowPipeline]
+        response = self.cr.route("TestWorkFlowPipeline", "TestTask1", MockRequest("GET", "/TestTask1"))
+        response = self.cr.route("TestWorkFlowPipeline", "TestTask1", MockRequest("POST", "/TestTask1", crowd_response=response))
+        self.assertTrue(response.path == "/TestTask2")
+        response = self.cr.route("TestWorkFlowPipeline", "TestTask2", MockRequest("POST", "/TestTask2", crowd_response=response))
+        self.assertTrue(response.path == "/TestTask3")
+
+    def test_post_pipeline(self):
+        self.cr.workflows = [TestWorkFlowPipelineRepeat]
+        response = self.cr.route("TestWorkFlowPipelineRepeat", "TestTask1", MockRequest("GET", "/TestTask1"))
+        self.assertFalse(hasattr(response, "pipeline_last"))
+        response = self.cr.route("TestWorkFlowPipelineRepeat", "TestTask1", MockRequest("POST", "/TestTask1", crowd_response=response))
+        self.assertFalse(hasattr(response, "pipeline_last"))
+        response = self.cr.route("TestWorkFlowPipelineRepeat", "TestTask1", MockRequest("POST", "/TestTask1", crowd_response=response))
+        self.assertFalse(hasattr(response, "pipeline_last"))
+        response = self.cr.route("TestWorkFlowPipelineRepeat", "TestTask1", MockRequest("POST", "/TestTask1", crowd_response=response))
+        self.assertTrue(response.pipeline_last == True)
+
+    def test_multiple_pipelines(self):
+        self.cr.workflows = [TestWorkFlowPipelineRepeat]
+        response = self.cr.route("TestWorkFlowPipelineRepeat", "TestTask1", MockRequest("GET", "/TestTask1"))
+        response = self.cr.route("TestWorkFlowPipelineRepeat", "TestTask1", MockRequest("POST", "/TestTask1", crowd_response=response))
+        response = self.cr.route("TestWorkFlowPipelineRepeat", "TestTask1", MockRequest("POST", "/TestTask1", crowd_response=response))
+        response = self.cr.route("TestWorkFlowPipelineRepeat", "TestTask1", MockRequest("POST", "/TestTask1", crowd_response=response))
+        self.assertTrue(response.path == "/")
+        self.assertTrue(response.crowd_request.get_session()[SESSION_PIPELINE_KEY] == {})
+        #Now, do it again.
+        response = self.cr.route("TestWorkFlowPipelineRepeat", "TestTask1", MockRequest("GET", "/TestTask1"))
+        response = self.cr.route("TestWorkFlowPipelineRepeat", "TestTask1", MockRequest("POST", "/TestTask1", crowd_response=response))
+        response = self.cr.route("TestWorkFlowPipelineRepeat", "TestTask1", MockRequest("POST", "/TestTask1", crowd_response=response))
+        response = self.cr.route("TestWorkFlowPipelineRepeat", "TestTask1", MockRequest("POST", "/TestTask1", crowd_response=response))
+        self.assertTrue(response.path == "/")
+        self.assertTrue(response.crowd_request.get_session()[SESSION_PIPELINE_KEY] == {})
+
+    def test_task_uri_success(self):
+        self.cr.workflows = [TestWorkFlowURI]
+        response = self.cr.route("TestWorkFlowURI", "TestTaskURI", MockRequest("GET", "/TestTaskURI/1/test", data={"task_id":1}))
+        self.assertTrue(response.path == "/TestTaskURI/1/test")
+
+    def test_task_uri_fail(self):
+        self.cr.workflows = [TestWorkFlowURI]
+        try:
+            response = self.cr.route("TestWorkFlowURI", "TestTaskURI", MockRequest("GET", "/TestTaskURI", data={"bad_param":1}))
+        except TaskError as e:
+            pass
+
+    def test_subclass_task(self):
+        self.cr.workflows = [TestWorkFlowSubTask]
+        response = self.cr.route("TestWorkFlowSubTask", "SubTask1", MockRequest("GET", "/TestTask1"))
+        self.assertTrue(response.path == "/TestTask1")
+
+    def test_error_bad_task(self):
+        self.cr.workflows = [TestWorkFlowBadTask]
+        try:
+            response = self.cr.route("TestWorkFlowBadTask", "BadTask", MockRequest("GET", "/BadTask"))
+        except TaskError as e:
+            pass
+
+    def test_pipeline_error(self):
+        self.cr.workflows = [TestWorkFlowPipeline]
+        response = self.cr.route("TestWorkFlowPipeline", "TestTask1", MockRequest("GET", "/TestTask1"))
+        try:
+            response = self.cr.route("TestWorkFlowPipeline", "TestTask2", MockRequest("GET", "/TestTask1", crowd_response=response))
+        except PipelineError as e:
+            pass
+
+    def test_pipeline_restart(self):
+        self.cr.workflows = [TestWorkFlowPipeline]
+        response = self.cr.route("TestWorkFlowPipeline", "TestTask1", MockRequest("GET", "/TestTask1"))
+        position = response.crowd_request.get_session()[SESSION_PIPELINE_KEY]
+        response = self.cr.route("TestWorkFlowPipeline", "TestTask1", MockRequest("POST", "/TestTask1", crowd_response=response))
+        response = self.cr.route("TestWorkFlowPipeline", "TestTask2", MockRequest("POST", "/TestTask2", crowd_response=response))
+        response = self.cr.route("TestWorkFlowPipeline", "TestTask1", MockRequest("GET", "/TestTask1", crowd_response=response))
+        self.assertEquals(response.crowd_request.get_session()[SESSION_PIPELINE_KEY], position)
+        self.assertTrue(response.path == "/TestTask1")
+
+    def test_crowdrouter_auth_success(self):
+        self.cr.workflows = [TestWorkFlow1]
+        self.cr.auth_required = True
+        mr = MockRequest("GET", "/TestTask1")
+        mr.session["username"] = "admin"
+        mr.session["password"] = "password"
+        response = self.cr.route("TestWorkFlow1", "TestTask1", mr)
+        self.assertTrue(self.cr.is_authenticated(response.crowd_request))
+
+    def test_crowdrouter_auth_fail(self):
+        self.cr.workflows = [TestWorkFlow1]
+        self.cr.auth_required = True
+        mr = MockRequest("GET", "/TestTask1")
+        mr.session["username"] = ""
+        mr.session["password"] = "password"
+        try:
+            response = self.cr.route("TestWorkFlow1", "TestTask1", mr)
+        except AuthenticationError as e:
+            pass
+
+    def test_workflow_auth_success(self):
+        self.cr.workflows = [TestWorkFlowAuth]
+        mr = MockRequest("GET", "/TestTask1")
+        mr.session["workflow_auth"] = True
+        response = self.cr.route("TestWorkFlowAuth", "TestTask1", mr)
+        self.assertTrue(response.task.workflow.is_authenticated(response.crowd_request))
+
+    def test_workflow_auth_fail(self):
+        self.cr.workflows = [TestWorkFlowAuth]
+        mr = MockRequest("GET", "/TestTask1")
+        mr.session["workflow_auth"] = False
+        try:
+            response = self.cr.route("TestWorkFlowAuth", "TestTask1", mr)
+        except AuthenticationError as e:
+            pass
+
+    def test_task_auth_success(self):
+        self.cr.workflows = [TestWorkFlowNoAuthWithTaskAuth]
+        mr = MockRequest("GET", "/TestTaskAuth")
+        mr.session["task_auth"] = True
+        response = self.cr.route("TestWorkFlowNoAuthWithTaskAuth", "TestTaskAuth", mr)
+        self.assertTrue(response.task.is_authenticated(response.crowd_request))
+
+    def test_task_auth_fail(self):
+        self.cr.workflows = [TestWorkFlowNoAuthWithTaskAuth]
+        mr = MockRequest("GET", "/TestTaskAuth")
+        mr.session["task_auth"] = False
+        try:
+            response = self.cr.route("TestWorkFlowNoAuthWithTaskAuth", "TestTaskAuth", mr)
+        except AuthenticationError as e:
+            pass
+
+    def test_auth_all(self):
+        self.cr = TestCrowdRouterAuth()
+        self.cr.workflows = [TestWorkFlowAuthWithTaskAuth]
+        mr = MockRequest("GET", "/TestTaskAuth")
+        mr.session["username"] = "admin"
+        mr.session["password"] = "password"
+        mr.session["workflow_auth"] = True
+        mr.session["task_auth"] = True
+        response = self.cr.route("TestWorkFlowAuthWithTaskAuth", "TestTaskAuth", mr)
+        self.assertTrue(self.cr.is_authenticated(response.crowd_request))
+        self.assertTrue(response.task.workflow.is_authenticated(response.crowd_request))
+        self.assertTrue(response.task.is_authenticated(response.crowd_request))
 
 if __name__ == '__main__':
     unittest.main()

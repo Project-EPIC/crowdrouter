@@ -1,3 +1,4 @@
+from context import *
 from crowdrouter.abstract_crowdrouter import AbstractCrowdRouter
 from workflow.abstract_workflow import AbstractWorkFlow
 from task.abstract_task import AbstractTask
