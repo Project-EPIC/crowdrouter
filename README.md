@@ -20,15 +20,14 @@ Here's a simple CrowdRouter:
 ```python
 class TestCrowdRouter(AbstractCrowdRouter):
 	def __init__(self):
-		self._workflows = [] #Put in workflow classes here.
-		self._task_counts = {} #Initialize as-is to keep track of task counts.
+		self.workflows = [TestWorkFlow] #Put in workflow classes here.
+		self.task_counts = {} #Initialize as-is to keep track of task counts.
 		
 	@crowdrouter
 	def route(self, crowd_request, workflow):
 		crowd_response = workflow.run(crowd_request)
-		self.update_task_count(workflow, crowd_response.get_task().get_name())
+		self.update_task_count(workflow, crowd_response)
 		return crowd_response
-
 ```
 
 Here's a simple WorkFlow that accepts any request.
@@ -36,38 +35,31 @@ Here's a simple WorkFlow that accepts any request.
 ```python
 class TestWorkFlow(AbstractWorkFlow):
 	def __init__(self):
-		_tasks = [TestTask1, TestTask2] #Put Task classes here.
+		tasks = [TestTask1, TestTask2] #Put Task classes here.
 	
 	@workflow
 	def run(self, task):
-		return task.execute(args, kwargs)
-
+		return task.execute() #Execute the task normally.
 ```
 
 And here's TestTask1:
 
 ```python
 class TestTask1(AbstractTask):
-	def __init__(self, crowd_request):
-		super(TestTask1, self).__init__(crowd_request)
-		
 	@task
-	def exec_request(self):
+	def get(self):
 		return {"status": "OK", "msg": "TEST [GET]"}
-		
 	@task
-	def exec_response(self):
+	def post(self):
 		return {"status": "OK", "msg": "TEST [POST]"}
-		
-
 ```
 
 That's it! Just globally initialize `crowdrouter = TestCrowdRouter()` and you're good to go. Try putting your CrowdRouter instance in various controller actions and re-organize those actions into Task instances:
 
 ```python
-def report(request):
+def perform_task(request, task_name):
 	...
-	crowdrouter.route(request, "TestWorkFlow", "TestTask1")
+	crowdrouter.route("TestWorkFlow", task_name, request, session)
 	...
 	
 ```
