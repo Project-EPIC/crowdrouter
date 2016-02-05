@@ -87,8 +87,9 @@ class TestTaskURI(AbstractTask):
         return {"status": "OK", "msg": "TEST [POST] - URI"}
 
 class TestWorkFlowSolo(AbstractWorkFlow):
+    tasks = [TestTask1]
+
     def __init__(self, cr):
-        self.tasks = [TestTask1]
         self.crowdrouter = cr
 
     @workflow
@@ -96,8 +97,9 @@ class TestWorkFlowSolo(AbstractWorkFlow):
         return task.execute()
 
 class TestWorkFlow1(AbstractWorkFlow):
+    tasks = [TestTask1, TestTask2]
+
     def __init__(self, cr):
-        self.tasks = [TestTask1, TestTask2]
         self.crowdrouter = cr
 
     @workflow
@@ -105,8 +107,9 @@ class TestWorkFlow1(AbstractWorkFlow):
         return task.execute()
 
 class TestWorkFlow2(AbstractWorkFlow):
+    tasks = [TestTask2, TestTask3]
+
     def __init__(self, cr):
-        self.tasks = [TestTask2, TestTask3]
         self.crowdrouter = cr
 
     @workflow
@@ -114,8 +117,9 @@ class TestWorkFlow2(AbstractWorkFlow):
         return task.execute()
 
 class TestWorkFlowSubTask(AbstractWorkFlow):
+    tasks = [SubTask1]
+
     def __init__(self, cr):
-        self.tasks = [SubTask1]
         self.crowdrouter = cr
 
     @workflow
@@ -123,8 +127,9 @@ class TestWorkFlowSubTask(AbstractWorkFlow):
         return task.execute()
 
 class TestWorkFlowURI(AbstractWorkFlow):
+    tasks = [TestTaskURI]
+
     def __init__(self, cr):
-        self.tasks = [TestTaskURI]
         self.crowdrouter = cr
 
     @workflow
@@ -132,8 +137,9 @@ class TestWorkFlowURI(AbstractWorkFlow):
         return task.execute()
 
 class TestWorkFlowBadTask(AbstractWorkFlow):
+    tasks = [BadTask]
+
     def __init__(self, cr):
-        self.tasks = [BadTask]
         self.crowdrouter = cr
 
     @workflow
@@ -141,8 +147,9 @@ class TestWorkFlowBadTask(AbstractWorkFlow):
         return task.execute()
 
 class TestWorkFlowWithPipeline(AbstractWorkFlow):
+    tasks = [TestTask1, TestTask2, TestTask3]
+
     def __init__(self, cr):
-        self.tasks = [TestTask1, TestTask2, TestTask3]
         self.crowdrouter = cr
 
     @workflow
@@ -153,8 +160,9 @@ class TestWorkFlowWithPipeline(AbstractWorkFlow):
             return self.pipeline(task, [TestTask1, TestTask2])
 
 class TestWorkFlowPipelineIdenticalTasks(AbstractWorkFlow):
+    tasks = [TestTask1, TestTask1, TestTask1]
+
     def __init__(self, cr):
-        self.tasks = [TestTask1, TestTask1, TestTask1]
         self.crowdrouter = cr
 
     @workflow
@@ -162,8 +170,9 @@ class TestWorkFlowPipelineIdenticalTasks(AbstractWorkFlow):
         return self.pipeline(task, [TestTask1, TestTask1, TestTask1])
 
 class TestWorkFlowPipelineRepeat(AbstractWorkFlow):
+    tasks = [TestTask1]
+
     def __init__(self, cr):
-        self.tasks = [TestTask1]
         self.crowdrouter = cr
 
     @workflow
@@ -171,8 +180,9 @@ class TestWorkFlowPipelineRepeat(AbstractWorkFlow):
         return self.repeat(task, 3)
 
 class TestWorkFlowPipeline(AbstractWorkFlow):
+    tasks = [TestTask1, TestTask2, TestTask3]
+
     def __init__(self, cr):
-        self.tasks = [TestTask1, TestTask2, TestTask3]
         self.crowdrouter = cr
 
     @workflow
@@ -191,8 +201,9 @@ class TestWorkFlowAuth(TestWorkFlowSolo):
         return crowd_request.get_session().get("workflow_auth") == True
 
 class TestWorkFlowNoAuthWithTaskAuth(AbstractWorkFlow):
+    tasks = [TestTaskAuth]
+
     def __init__(self, cr):
-        self.tasks = [TestTaskAuth]
         self.crowdrouter = cr
     @workflow
     def run(self, task):
@@ -204,15 +215,14 @@ class TestWorkFlowAuthWithTaskAuth(TestWorkFlowNoAuthWithTaskAuth):
         return crowd_request.get_session().get("workflow_auth") == True
 
 class TestCrowdRouter(AbstractCrowdRouter):
+    workflows = []
+    
     def __init__(self):
-        self.workflows = []
-        self.task_counts = {}
+        self.enable_crowd_statistics("test_crowd_statistics.db")
 
     @crowdrouter
     def route(self, crowd_request, workflow):
-        crowd_response = workflow.run(crowd_request)
-        self.update_task_count(workflow, crowd_response)
-        return crowd_response
+        return workflow.run(crowd_request)
 
     def is_authenticated(self, crowd_request):
         return crowd_request.get_session().get("username") == "admin" and crowd_request.get_session().get("password") == "password"

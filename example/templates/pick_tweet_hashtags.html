@@ -1,0 +1,25 @@
+{% extends 'home.html' %}
+
+{% block js %}
+  <script src="{{ url_for('static', filename='js/pick_tweet_hashtags.js')}}" type="text/javascript"></script>
+{% endblock js %}
+
+{% block title %}<title>SimpleCrowdRouter - Pick Tweet Hashtags</title>{% endblock title %}
+
+{% block body %}
+  <h1>Pick Tweet Hashtags</h1>
+  <h4>Please write down the hashtags that appear on the tweet below.</h4>
+  <div id='task'>
+    <div id="disaster-tweet" style="margin: 20px auto;"></div>
+
+    <form method="POST" action="/workflow/{{ workflow.id }}/PickTweetHashtagsTask">
+      <h4> What hashtags appear on this tweet?</h4>
+      <legend>(Separate by Commas, Leave Blank if None, Refresh if desired) </legend>
+      <input name="answer" type="text" width="600" autofocus="true" style="margin:10px;">
+      <input type="hidden" id="tweet_id" name="tweet_id" value="{{ response.tweet_id }}">
+      <hr/>
+      <a href="/" class="btn btn-default bg-gray" value="Go Back">Go Back</a>
+      <input class="btn btn-primary mb1 bg-blue" type="submit" value="Submit" style="margin:10px;">
+    </form>
+  </div>
+{% endblock body %}

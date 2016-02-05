@@ -57,3 +57,5 @@ docs/_build/
 target/
 bin
 MANIFEST
+crowd_statistics.db
+test_crowd_statistics.db

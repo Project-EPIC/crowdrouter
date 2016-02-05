@@ -9,6 +9,7 @@ import inspect, unittest, random, ipdb
 class Testing(unittest.TestCase):
     def setUp(self):
         self.cr = TestCrowdRouter()
+        self.cr.clear_crowd_statistics()
 
     def test_fail_create_crowdrouter(self):
         try:
@@ -110,7 +111,7 @@ class Testing(unittest.TestCase):
         rand_count = random.randint(1, 10)
         for i in range(0, rand_count):
             self.cr.route("TestWorkFlow1", "TestTask1", MockRequest("GET", "/TestTask1"))
-        self.assertEquals(self.cr.task_counts["TestWorkFlow1"]["TestTask1"], rand_count)
+        self.assertEquals(self.cr.crowd_stats.task_visits["TestWorkFlow1"]["TestTask1"]["GET"], rand_count)
 
     def test_success_tally_multiple_task_executions(self):
         self.cr.workflows = [TestWorkFlow1]
@@ -119,9 +120,43 @@ class Testing(unittest.TestCase):
             task = random.choice(["TestTask1", "TestTask2"])
             response = self.cr.route("TestWorkFlow1", task, MockRequest(random.choice(["GET", "POST"]), "/%s" % task))
 
-        self.assertTrue(self.cr.task_counts["TestWorkFlow1"]["TestTask1"] <= rand_count)
-        self.assertTrue(self.cr.task_counts["TestWorkFlow1"]["TestTask2"] <= rand_count)
-        self.assertEquals(sum(self.cr.task_counts["TestWorkFlow1"].values()), rand_count)
+        task_counts = self.cr.crowd_stats.task_counts["TestWorkFlow1"]
+        self.assertTrue(task_counts["TestTask1"]["GET"] <= rand_count)
+        self.assertTrue(task_counts["TestTask2"]["POST"] <= rand_count)
+        self.assertEquals(sum(task_counts["TestTask1"].values()) + sum(task_counts["TestTask2"].values()), rand_count)
+
+    def test_success_tally_multiple_workflow_executions(self):
+        self.cr.workflows = [TestWorkFlow1, TestWorkFlow2, TestWorkFlowSolo]
+        self.cr.enable_crowd_statistics("test_crowd_statistics.db")
+
+        rand_count = random.randint(1, 20)
+        for i in range(0, rand_count):
+            r = random.random()
+            if r < 0.33:
+                workflow = "TestWorkFlow1"
+                task = random.choice(["TestTask1", "TestTask2"])
+            elif r < 0.66:
+                workflow = "TestWorkFlow2"
+                task = random.choice(["TestTask2", "TestTask3"])
+            else:
+                workflow = "TestWorkFlowSolo"
+                task = random.choice(["TestTask1"])
+            response = self.cr.route(workflow, task, MockRequest(random.choice(["GET", "POST"]), "/%s" % task))
+
+        task_counts_1 = self.cr.crowd_stats.task_counts["TestWorkFlow1"]
+        self.assertTrue(task_counts_1.get("TestTask1").get("GET") or 0 <= rand_count)
+        self.assertTrue(task_counts_1["TestTask2"]["POST"] or 0 <= rand_count)
+        self.assertTrue(sum(task_counts_1["TestTask1"].values()) + sum(task_counts_1["TestTask2"].values()) <= rand_count)
+
+        task_counts_2 = self.cr.crowd_stats.task_counts["TestWorkFlow2"]
+        self.assertTrue(task_counts_2["TestTask2"]["GET"] <= rand_count)
+        self.assertTrue(task_counts_2["TestTask3"]["POST"] <= rand_count)
+        self.assertTrue(sum(task_counts_2["TestTask2"].values()) + sum(task_counts_2["TestTask3"].values()) <= rand_count)
+
+        task_counts_solo = self.cr.crowd_stats.task_counts["TestWorkFlowSolo"]
+        self.assertTrue(task_counts_1["TestTask1"]["GET"] <= rand_count)
+        self.assertTrue(sum(task_counts_1["TestTask1"].values()) <= rand_count)
+        self.assertTrue(sum([sum(v.values()) for v in [i for s in [v.values() for v in self.cr.crowd_stats.task_counts.values()] for i in s]]) == rand_count)
 
     def test_pipeline_tasks1(self):
         self.cr.workflows = [TestWorkFlowWithPipeline]
@@ -348,6 +383,22 @@ class Testing(unittest.TestCase):
         self.assertTrue(self.cr.is_authenticated(response.crowd_request))
         self.assertTrue(response.task.workflow.is_authenticated(response.crowd_request))
         self.assertTrue(response.task.is_authenticated(response.crowd_request))
+
+    def test_swap_workflow_dynamically(self):
+        self.cr.workflows = [TestWorkFlowSolo]
+        response = self.cr.route("TestWorkFlowSolo", "TestTask1", MockRequest("GET", "/TestTask1"))
+        self.assertTrue(response.path == "/TestTask1")
+        self.cr.workflows = [TestWorkFlow1]
+        response = self.cr.route("TestWorkFlow1", "TestTask2", MockRequest("GET", "/TestTask2"))
+        self.assertTrue(response.path == "/TestTask2")
+
+    def test_swap_task_dynamically(self):
+        t = TestWorkFlowSolo
+        t.tasks = [TestTask2] #Instead of TestTask1
+        self.cr.workflows = [t]
+        response = self.cr.route("TestWorkFlowSolo", "TestTask2", MockRequest("GET", "/TestTask2"))
+        self.assertTrue(response.path == "/TestTask2")
+        t.tasks = [TestTask1] #Swap back.
 
 if __name__ == '__main__':
     unittest.main()

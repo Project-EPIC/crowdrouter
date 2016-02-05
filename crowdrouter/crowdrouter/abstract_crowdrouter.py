@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 from ..workflow.abstract_workflow import AbstractWorkFlow
 from ..utils import print_msg
 from ..decorators import crowdrouter
+from ..crowd_stats import CrowdStats
 import ipdb
 
 #CrowdRouter is a manager class that composes the workflow object to perform crowd tasks.
@@ -17,31 +18,39 @@ class AbstractCrowdRouter:
     whitelist = [] #Use whitelist to permit specific user IDs
     blacklist = [] #Use blacklist to disallow specific user IDs
     task_counts = {} #Used to tally up task executions.
+    task_visits = {} #Used to tally up task visits.
     auth_required = False #Used to flag whether authentication required for this class.
+    crowd_stats = None #Helper class to manage crowd statistics
 
     @abstractmethod
     def __init__(self):
-        self.workflows = []
         self.num_allowable_requests = None
         self.whitelist = []
         self.blacklist = []
-        self.task_counts = {}
+        #% authenticated users vs. non-authenticated
+        #time taken to complete task.
         self.auth_required = False
+        self.crowd_stats = CrowdStats()
 
     @abstractmethod
     @crowdrouter
     def route(self, crowd_request, workflow, **kwargs):
-        crowd_response = workflow.run(crowd_request, kwargs)
-        self.update_task_count(workflow, crowd_response)
-        return crowd_response
+        return workflow.run(crowd_request, kwargs)
 
-    #Update task execution counts for the specified Workflow and Task.
-    def update_task_count(self, workflow, crowd_response):
-        task_name = crowd_response.task.get_name()
-        workflow_name = workflow.get_name()
-        if not self.task_counts.get(workflow_name):
-            self.task_counts[workflow_name] = {task.__name__:0 for task in workflow.tasks}
-        self.task_counts[workflow_name][task_name] += 1
+    #Method to initialize crowd stats.
+    def enable_crowd_statistics(self, db_path):
+        self.crowd_stats = CrowdStats(db_path, self.workflows)
+
+    #Update Crowd Stats.
+    def update_crowd_statistics(self, workflow, crowd_response):
+        self.crowd_stats.update(workflow, crowd_response)
+
+    #Report Crowd Stats.
+    def report_crowd_statistics(self):
+        self.crowd_stats.report()
+
+    def clear_crowd_statistics(self):
+        self.crowd_stats.clear()
 
     #This boolean authentication function needs to be implemented if class decorator is declared.
     #Define authentication protocol for CrowdRouter here.

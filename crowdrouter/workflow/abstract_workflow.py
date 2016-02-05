@@ -20,7 +20,6 @@ class AbstractWorkFlow:
 
     @abstractmethod
     def __init__(self, crowdrouter):
-        self.tasks = []
         self.auth_required = False
         self.crowdrouter = crowdrouter
 

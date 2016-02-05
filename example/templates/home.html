@@ -3,6 +3,9 @@
     {% block title %}<title>SimpleCrowdRouter</title>{% endblock title %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/basscss.min.css')}}" type="text/css"></link>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css')}}" type="text/css"></link>
+    <script src="{{ url_for('static', filename='js/jquery.min.js')}}" type="text/javascript"></script>
+    {% block js %}
+    {% endblock js %}
   </head>
 
   <body style="padding:20px;">
@@ -49,8 +52,11 @@
               <tr>
                 {% if task.task_name == "RankingImageTask" %}
                   <td><a href="/workflow/{{ workflow.id }}/RankingImageTask">{{ task.name }}</a></td>
-                {% else %}
+                {% elif task.task_name == "AnswerQuestionsTask" %}
                   <td><a href="/workflow/{{ workflow.id }}/AnswerQuestionsTask">{{ task.name }}</a></td>
+                {% elif task.task_name == "PickTweetHashtagsTask" %}
+                  <td><a href="/workflow/{{ workflow.id }}/PickTweetHashtagsTask">{{ task.name }}</a></td>
+                {% else %}
                 {% endif %}
                   <td>{{ task.description }}</td>
                   <td>{{ task.date_created_at }}</td>

@@ -2,6 +2,7 @@ from context import CrowdRequest
 from context import CrowdResponse
 from utils import *
 from errors import *
+from crowd_stats import CrowdStats
 import ipdb
 
 #Task Decorator
@@ -74,6 +75,11 @@ def crowdrouter(run_func):
 
             if not isinstance(response, CrowdResponse): #Ensure a CrowdResponse is returned.
                 raise TypeError("CrowdRouter must return a CrowdResponse instance.")
+
+            #If Crowd Statistics Gathering is turned ON.
+            if isinstance(self.crowd_stats, CrowdStats):
+                self.update_crowd_statistics(workflow, response)
+
             return response
         except CrowdRouterError as e:
             print "[" + e.__class__.__name__ + "]: " + e.value

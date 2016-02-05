@@ -60,7 +60,7 @@ def logout():
 @app.route("/workflow/<int:workflow_id>/<task_name>", methods=["GET", "POST"])
 def perform_task(workflow_id, task_name):
     workflow = WorkFlow.get(WorkFlow.id == workflow_id)
-    import ipdb; ipdb.set_trace()
+    # import ipdb; ipdb.set_trace()
 
     try:
         response = cr.route(workflow.workflow_name, task_name, request, session)
@@ -87,7 +87,7 @@ def populate_tasks():
     db.create_tables([Task, WorkFlow])
 
     #Create WorkFlows
-    basic_workflow = WorkFlow.create(name="Rank or Answer", description="Rank an Image or Answer a Question.", workflow_name="BasicWorkFlow")
+    basic_workflow = WorkFlow.create(name="Perform a Single Task", description="Rank an Image, Answer a Question, or Pick Out Tweet Hashtags.", workflow_name="BasicWorkFlow")
     rank_multiple_images_workflow = WorkFlow.create(name= "Rank Multiple Images", description="Rate Damage Severity of Multiple Images.", workflow_name="RankingMultipleImagesWorkFlow")
     answer_multiple_questions_workflow = WorkFlow.create(name= "Answer Multiple Questions", description="Answer Multiple Questions Based on Disaster Images", workflow_name="AnswerMultipleQuestionsWorkFlow")
     mixed_workflow = WorkFlow.create(name= "Mixed", description="Mixed WorkFlow", workflow_name="MixedWorkFlow")
@@ -96,10 +96,15 @@ def populate_tasks():
     #Create Tasks
     Task.create(name="Rank an Image", description="Rate Damage Severity of an Image.", task_name="RankingImageTask", workflow_name=basic_workflow)
     Task.create(name="Answer a Question", description="Answer a Question.", task_name="AnswerQuestionsTask", workflow_name=basic_workflow)
+    Task.create(name="Pick Tweet Hashtags", description="Select hashtags from a given tweet.", task_name="PickTweetHashtagsTask", workflow_name=basic_workflow)
+
     Task.create(name="Rank an Image", description="Rate Damage Severity of an Image.", task_name="RankingImageTask", workflow_name=rank_multiple_images_workflow)
     Task.create(name="Answer a Question", description="Answer a Question.", task_name="AnswerQuestionsTask", workflow_name=answer_multiple_questions_workflow)
+
     Task.create(name="Rank an Image", description="Rate Damage Severity of an Image.", task_name="RankingImageTask", workflow_name=mixed_workflow)
     Task.create(name="Answer a Question", description="Answer a Question.", task_name="AnswerQuestionsTask", workflow_name=mixed_workflow)
+    Task.create(name="Pick Tweet Hashtags", description="Select hashtags from a given tweet.", task_name="PickTweetHashtagsTask", workflow_name=mixed_workflow)
+
     Task.create(name="Rank an Image", description="Rate Damage Severity of an Image.", task_name="RankingImageTask", workflow_name=auth_workflow)
     Task.create(name="Answer a Question", description="Answer a Question.", task_name="AnswerQuestionsTask", workflow_name=auth_workflow)
 
