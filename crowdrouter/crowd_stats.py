@@ -24,6 +24,8 @@ class CrowdStats:
         #Base case - initialize any extra workflow keys in task_counts.
         if not self.task_counts.get(workflow_name):
             self.task_counts[workflow_name] = {task.__name__: {"GET":0, "POST":0} for task in workflow.tasks}
+        elif not self.task_counts[workflow_name].get(task_name):
+            self.task_counts[workflow_name][task_name] = {"GET":0, "POST":0}
 
         #Task Counts
         method = crowd_response.crowd_request.get_method()

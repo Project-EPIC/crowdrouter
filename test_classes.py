@@ -84,7 +84,15 @@ class TestTaskURI(AbstractTask):
 
     @task("/TestTaskURI/<task_id>/test")
     def post(self, **kwargs):
-        return {"status": "OK", "msg": "TEST [POST] - URI"}
+        return {"status": "OK", "msg": "TEST [POST] - URI", "test_id":1}
+
+class TestTaskURI2(AbstractTask):
+    @task("/TestTaskURI2/<test_id>")
+    def get(self, **kwargs):
+        return {"status": "OK"}
+    @task("/TestTaskURI2/<test_id>")
+    def post(self, **kwargs):
+        return {"status": "OK"}
 
 class TestWorkFlowSolo(AbstractWorkFlow):
     tasks = [TestTask1]
@@ -195,6 +203,14 @@ class TestWorkFlowPipeline(AbstractWorkFlow):
     def post_pipeline(self, task, response, pipe_data):
         response.path = "/"
 
+class TestWorkFlowPipelineURI(AbstractWorkFlow):
+    tasks = [TestTaskURI, TestTaskURI2]
+    def __init__(self, cr):
+        self.crowdrouter = cr
+    @workflow
+    def run(self, task):
+        return self.pipeline(task)
+
 @workflow_auth_required
 class TestWorkFlowAuth(TestWorkFlowSolo):
     def is_authenticated(self, crowd_request):
@@ -216,7 +232,7 @@ class TestWorkFlowAuthWithTaskAuth(TestWorkFlowNoAuthWithTaskAuth):
 
 class TestCrowdRouter(AbstractCrowdRouter):
     workflows = []
-    
+
     def __init__(self):
         self.enable_crowd_statistics("test_crowd_statistics.db")
 

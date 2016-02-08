@@ -41,8 +41,7 @@ class AbstractWorkFlow:
         pass
 
     #The step_pipeline() function is invoked after every pipe from one task to another. Place
-    #logic in here for proper redirection (e.g. response['path']) after one task has finished
-    #and another task has begun. By default, nothing is done.
+    #logic in here for custom session data or custom redirection. By default, nothing is done.
     def step_pipeline(self, next_task, prev_task, response, pipe_data):
         pass
 

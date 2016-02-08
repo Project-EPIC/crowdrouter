@@ -416,5 +416,21 @@ class Testing(unittest.TestCase):
         response = self.cr.route("TestWorkFlowSolo", "TestTask1", MockRequest("GET", "/TestTask1"), data=extra_data)
         self.assertTrue(extra_data == response.crowd_request.get_data().get("data"))
 
+    def test_task_uri_with_pipeline(self):
+        self.cr.workflows = [TestWorkFlowPipelineURI]
+        response = self.cr.route("TestWorkFlowPipelineURI", "TestTaskURI", MockRequest("GET", "/TestTaskURI/10/test"), task_id=10)
+        response = self.cr.route("TestWorkFlowPipelineURI", "TestTaskURI", MockRequest("POST", "/TestTaskURI/10/test", crowd_response=response), task_id=10)
+        self.assertEquals(response.path, "/TestTaskURI2/1")
+
+    def test_new_task_crowd_stats(self):
+        self.cr.workflows = [TestWorkFlow1]
+        t = TestWorkFlow1
+        t.tasks = [TestTask3]
+        response = self.cr.route("TestWorkFlow1", "TestTask3", MockRequest("GET", "/TestTask3"))
+        self.assertTrue(response.path == "/TestTask3")
+        report = self.cr.crowd_stats.report()
+        self.assertTrue(report["task_counts"]["TestWorkFlow1"].has_key("TestTask3"))
+        t.tasks = [TestTask1, TestTask2] #Swap back.
+
 if __name__ == '__main__':
     unittest.main()

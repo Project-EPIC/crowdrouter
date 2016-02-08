@@ -39,6 +39,9 @@ class CrowdRequest(object):
         crowd_request.request_strategy.method = "GET"
         crowd_request.task_name = next_task.__name__
 
+        #Update Request Data with Response Data.
+        crowd_request.request_strategy.data.update(crowd_response.response)
+
         try: #Use meta-programming to retrieve path value from method decorator.
             path = next_task.get.im_func.func_closure[1].cell_contents
         except:

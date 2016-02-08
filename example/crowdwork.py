@@ -1,5 +1,5 @@
 import os, sys, ipdb
-sys.path.append("../dist/crowdrouter-1.5")
+sys.path.append("../dist/crowdrouter-1.5.2")
 from crowdrouter import AbstractCrowdRouter, AbstractWorkFlow, AbstractTask
 from crowdrouter.decorators import *
 from TwitterSearch import *
