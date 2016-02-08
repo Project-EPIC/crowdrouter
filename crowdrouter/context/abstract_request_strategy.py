@@ -19,7 +19,7 @@ class AbstractRequestStrategy:
         pass
 
     @staticmethod
-    def factory(request, session=None):
+    def factory(request, session=None, **kwargs):
         from flask_request_strategy import FlaskRequestStrategy
         from django_request_strategy import DjangoRequestStrategy
         from mock_request_strategy import MockRequestStrategy
@@ -39,13 +39,17 @@ class AbstractRequestStrategy:
             raise InvalidRequestError(value="Request parameter 'path' is required.")
 
         if clazz == "LocalProxy":
-            return FlaskRequestStrategy(request, session)
+            strategy = FlaskRequestStrategy(request, session)
         elif clazz == "WSGIRequest":
-            return DjangoRequestStrategy(request)
+            strategy = DjangoRequestStrategy(request)
         elif clazz == "MockRequest":
-            return MockRequestStrategy(request)
+            strategy = MockRequestStrategy(request)
         else:
             raise NoRequestFoundError(value="Request Class %s not found. Cannot continue." % clazz)
+
+        if kwargs: #If kwargs...add to data.
+            strategy.data.update(kwargs)
+        return strategy
 
 
     def __repr__(self):

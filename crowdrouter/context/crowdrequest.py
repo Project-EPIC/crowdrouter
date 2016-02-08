@@ -16,8 +16,8 @@ class CrowdRequest(object):
         self.previous_response = prev_response
 
     @staticmethod
-    def factory(workflow_name, task_name, request, session=None, prev_response=None):
-        return CrowdRequest(workflow_name, task_name, AbstractRequestStrategy.factory(request, session), prev_response)
+    def factory(workflow_name, task_name, request, session=None, prev_response=None, **kwargs):
+        return CrowdRequest(workflow_name, task_name, AbstractRequestStrategy.factory(request, session, **kwargs), prev_response)
 
     #Getters
     def get_request(self):

@@ -52,7 +52,7 @@ def workflow(run_func):
 
 #CrowdRouter Decorator
 def crowdrouter(run_func):
-    def _wrapper(self, workflow_name, task_name, request, session=None):
+    def _wrapper(self, workflow_name, task_name, request, session=None, **kwargs):
         try:
             print_msg("@crowdrouter called for %s" % self)
             workflows = {workflow.__name__:workflow for workflow in self.workflows}
@@ -65,7 +65,7 @@ def crowdrouter(run_func):
                 raise NoWorkFlowFoundError(value="Workflow %s not found. Ensure that the underlying CrowdRouter class has declared this instance." % workflow_name)
 
             #Craft the CrowdRequest object.
-            crowd_request = CrowdRequest.factory(workflow_name, task_name, request, session)
+            crowd_request = CrowdRequest.factory(workflow_name, task_name, request, session, **kwargs)
 
             #If Authentication is Turned ON.
             if self.auth_required == True:

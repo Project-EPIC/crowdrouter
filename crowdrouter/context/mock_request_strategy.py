@@ -7,7 +7,7 @@ class MockRequestStrategy(abstract_request_strategy.AbstractRequestStrategy):
             self.request = request
             self.session = request.session
             self.path = request.path
-            self.data = request.data
+            self.data = request.data or {}
             self.method = request.method
             self.form = request.form
         except:

@@ -282,6 +282,16 @@ class Testing(unittest.TestCase):
         response = self.cr.route("TestWorkFlowURI", "TestTaskURI", MockRequest("GET", "/TestTaskURI/1/test", data={"task_id":1}))
         self.assertTrue(response.path == "/TestTaskURI/1/test")
 
+    def test_task_uri_extra_request_data_packaged(self):
+        self.cr.workflows = [TestWorkFlowURI]
+        response = self.cr.route("TestWorkFlowURI", "TestTaskURI", MockRequest("GET", "/TestTaskURI/1/test"), data={"task_id":1})
+        self.assertTrue(response.path == "/TestTaskURI/1/test")
+
+    def test_task_uri_extra_request_data_unpackaged(self):
+        self.cr.workflows = [TestWorkFlowURI]
+        response = self.cr.route("TestWorkFlowURI", "TestTaskURI", MockRequest("GET", "/TestTaskURI/1/test"), task_id=1)
+        self.assertTrue(response.path == "/TestTaskURI/1/test")
+
     def test_task_uri_fail(self):
         self.cr.workflows = [TestWorkFlowURI]
         try:
@@ -399,6 +409,12 @@ class Testing(unittest.TestCase):
         response = self.cr.route("TestWorkFlowSolo", "TestTask2", MockRequest("GET", "/TestTask2"))
         self.assertTrue(response.path == "/TestTask2")
         t.tasks = [TestTask1] #Swap back.
+
+    def test_add_extra_request_data(self):
+        self.cr.workflows = [TestWorkFlowSolo]
+        extra_data = {"test_id": 1000}
+        response = self.cr.route("TestWorkFlowSolo", "TestTask1", MockRequest("GET", "/TestTask1"), data=extra_data)
+        self.assertTrue(extra_data == response.crowd_request.get_data().get("data"))
 
 if __name__ == '__main__':
     unittest.main()

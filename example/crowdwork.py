@@ -1,5 +1,5 @@
 import os, sys, ipdb
-sys.path.append("../dist/crowdrouter-1.3")
+sys.path.append("../dist/crowdrouter-1.5")
 from crowdrouter import AbstractCrowdRouter, AbstractWorkFlow, AbstractTask
 from crowdrouter.decorators import *
 from TwitterSearch import *
@@ -124,8 +124,8 @@ class AuthWorkFlow(BasicWorkFlow):
         return session.get("user") == "admin"
 
 class MyCrowdRouter(AbstractCrowdRouter):
+    workflows = [BasicWorkFlow, RankingMultipleImagesWorkFlow, AnswerMultipleQuestionsWorkFlow, MixedWorkFlow, AuthWorkFlow]
     def __init__(self):
-        self.workflows = [BasicWorkFlow, RankingMultipleImagesWorkFlow, AnswerMultipleQuestionsWorkFlow, MixedWorkFlow, AuthWorkFlow]
         self.enable_crowd_statistics("test_crowd_statistics.db")
 
     @crowdrouter
