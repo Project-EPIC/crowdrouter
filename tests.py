@@ -432,5 +432,24 @@ class Testing(unittest.TestCase):
         self.assertTrue(report["task_counts"]["TestWorkFlow1"].has_key("TestTask3"))
         t.tasks = [TestTask1, TestTask2] #Swap back.
 
+    def test_pipeline_stats(self):
+        self.cr.workflows = [TestWorkFlowPipeline]
+        response = self.cr.route("TestWorkFlowPipeline", "TestTask1", MockRequest("GET", "/TestTask1"))
+        response = self.cr.route("TestWorkFlowPipeline", "TestTask1", MockRequest("POST", "/TestTask1", crowd_response=response))
+        report = self.cr.crowd_stats.report()["task_counts"]["TestWorkFlowPipeline"]["TestTask1"]
+        self.assertTrue(report["GET"] == report["POST"] == 1)
+
+    def test_crowd_stats_report(self):
+        self.cr.workflows = [TestWorkFlowSolo, TestWorkFlow1]
+        response = self.cr.route("TestWorkFlowSolo", "TestTask1", MockRequest("GET", "/TestTask1"))
+        response = self.cr.route("TestWorkFlow1", "TestTask1", MockRequest("GET", "/TestTask1"))
+        response = self.cr.route("TestWorkFlow1", "TestTask1", MockRequest("POST", "/TestTask1"))
+        report = self.cr.report_crowd_statistics()
+        self.assertTrue(report["task_counts"].keys(), ["TestWorkFlowSolo", "TestWorkFlow1"])
+        self.assertTrue(report["task_counts"]["TestWorkFlowSolo"]["TestTask1"]["GET"] == 1)
+        self.assertTrue(report["task_counts"]["TestWorkFlow1"]["TestTask1"]["GET"] == 1)
+        self.assertTrue(report["task_counts"]["TestWorkFlow1"]["TestTask1"]["POST"] == 1)
+
+
 if __name__ == '__main__':
     unittest.main()

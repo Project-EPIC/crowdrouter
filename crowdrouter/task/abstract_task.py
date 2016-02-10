@@ -37,10 +37,10 @@ class AbstractTask:
 
     @abstractmethod
     @task("/")
-    def get(self, **kwargs):
+    def get(self, crowd_request, data, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
     @task("/")
-    def post(self, **kwargs):
+    def post(self, crowd_request, form, **kwargs):
         raise NotImplementedError

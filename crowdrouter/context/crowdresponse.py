@@ -3,6 +3,7 @@ import ipdb
 
 class CrowdResponse(object):
     crowd_request = None
+    method = None
     status = None
     task = None
     response = None
@@ -12,6 +13,7 @@ class CrowdResponse(object):
         try:
             self.task = task
             self.crowd_request = task.crowd_request
+            self.method = self.crowd_request.get_method()
             self.response = response
             self.status = response["status"]
             self.path = response["path"]

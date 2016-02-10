@@ -61,26 +61,24 @@ def logout():
 def perform_task(workflow_id, task_name):
     workflow = WorkFlow.get(WorkFlow.id == workflow_id)
     # import ipdb; ipdb.set_trace()
-
     try:
         response = cr.route(workflow.workflow_name, task_name, request, session)
+
     except AuthenticationError:
         flash("Oops! You're not allowed to perform that task.", "fail")
         return redirect("/")
 
-    if request.method == "GET":
+    if response.method == "GET":
         return render_template(response.response["template"], workflow=workflow, response=response.response)
     else:
         if response.path == "/":
             flash("Thanks for your input!", "success")
         return redirect(response.path)
 
-
-
-
-
-
-
+@app.route("/stats", methods=["GET"])
+def stats():
+    report = cr.report_crowd_statistics()
+    return render_template("stats.html", report=report)
 
 def populate_tasks():
     db.drop_tables([Task, WorkFlow])

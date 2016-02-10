@@ -9,6 +9,6 @@ class MockRequestStrategy(abstract_request_strategy.AbstractRequestStrategy):
             self.path = request.path
             self.data = request.data or {}
             self.method = request.method
-            self.form = request.form
+            self.form = request.form or {}
         except:
             raise InvalidRequestError(value="MockRequestStrategy cannot properly bind all needed variables for request %s." % request)

@@ -47,7 +47,7 @@ class AbstractCrowdRouter:
 
     #Report Crowd Stats.
     def report_crowd_statistics(self):
-        self.crowd_stats.report()
+        return self.crowd_stats.report()
 
     def clear_crowd_statistics(self):
         self.crowd_stats.clear()

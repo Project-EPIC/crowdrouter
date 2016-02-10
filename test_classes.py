@@ -20,34 +20,34 @@ class MockRequest(object):
 
 class TestTask1(AbstractTask):
     @task("/TestTask1")
-    def get(self, **kwargs):
+    def get(self, crowd_request, data, **kwargs):
         print_msg("TEST [GET]-1")
         return {"status": "OK", "msg": "TEST [GET]"}
 
     @task("/TestTask1")
-    def post(self, **kwargs):
+    def post(self, crowd_request, data, form, **kwargs):
         print_msg("TEST [POST]-1")
         return {"status": "OK", "msg": "TEST [POST]"}
 
 class TestTask2(AbstractTask):
     @task("/TestTask2")
-    def get(self, **kwargs):
+    def get(self, crowd_request, data, **kwargs):
         print_msg("TEST [GET]-2")
         return {"status": "OK", "msg": "TEST [GET]-2"}
 
     @task("/TestTask2")
-    def post(self, **kwargs):
+    def post(self, crowd_request, data, form, **kwargs):
         print_msg("TEST [POST]-2")
         return {"status": "OK", "msg": "TEST [POST]-2"}
 
 class TestTask3(AbstractTask):
     @task("/TestTask3")
-    def get(self, **kwargs):
+    def get(self, crowd_request, data, **kwargs):
         print_msg("TEST [GET]-3")
         return {"status": "OK", "msg": "TEST [GET]-3"}
 
     @task("/TestTask3")
-    def post(self, **kwargs):
+    def post(self, crowd_request, data, form, **kwargs):
         print_msg("TEST [POST]-3")
         return {"status": "OK", "msg": "TEST [POST]-3"}
 
@@ -57,12 +57,12 @@ class SubTask1(TestTask1):
 @task_auth_required
 class TestTaskAuth(AbstractTask):
     @task("/TestTaskAuth")
-    def get(self, **kwargs):
+    def get(self, crowd_request, data, **kwargs):
         print_msg("TEST [GET]-TestTaskAuth")
         return {"status": "OK", "msg": "TEST [GET]-3"}
 
     @task("/TestTaskAuth")
-    def post(self, **kwargs):
+    def post(self, crowd_request, data, form, **kwargs):
         print_msg("TEST [POST]-TestTaskAuth")
         return {"status": "OK", "msg": "TEST [POST]-3"}
 
@@ -71,27 +71,27 @@ class TestTaskAuth(AbstractTask):
 
 class BadTask(AbstractTask):
     @task
-    def get(self, **kwargs):
+    def get(self, crowd_request, data, **kwargs):
         return {"status": "OK", "msg": "TEST [GET] - BAD"}
     @task
-    def post(self, **kwargs):
+    def post(self, crowd_request, data, form, **kwargs):
         return {"status": "OK", "msg": "TEST [POST] - BAD"}
 
 class TestTaskURI(AbstractTask):
     @task("/TestTaskURI/<task_id>/test")
-    def get(self, **kwargs):
+    def get(self, crowd_request, data, **kwargs):
         return {"status": "OK", "msg": "TEST [GET] - URI"}
 
     @task("/TestTaskURI/<task_id>/test")
-    def post(self, **kwargs):
+    def post(self, crowd_request, data, form, **kwargs):
         return {"status": "OK", "msg": "TEST [POST] - URI", "test_id":1}
 
 class TestTaskURI2(AbstractTask):
     @task("/TestTaskURI2/<test_id>")
-    def get(self, **kwargs):
+    def get(self, crowd_request, data, **kwargs):
         return {"status": "OK"}
     @task("/TestTaskURI2/<test_id>")
-    def post(self, **kwargs):
+    def post(self, crowd_request, data, form, **kwargs):
         return {"status": "OK"}
 
 class TestWorkFlowSolo(AbstractWorkFlow):

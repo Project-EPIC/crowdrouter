@@ -1,5 +1,5 @@
 import os, sys, ipdb
-sys.path.append("../dist/crowdrouter-1.5.2")
+sys.path.append("../dist/crowdrouter-1.5.3")
 from crowdrouter import AbstractCrowdRouter, AbstractWorkFlow, AbstractTask
 from crowdrouter.decorators import *
 from TwitterSearch import *
@@ -8,7 +8,7 @@ RESULTS_FILE = "results.json"
 
 class RankingImageTask(AbstractTask):
     @task("/workflow/<workflow_id>/RankingImageTask")
-    def get(self, **kwargs):
+    def get(self, crowd_request, data, **kwargs):
         return {
             "status": "OK",
             "img":random.choice(["img" + str(x) + ".jpeg" for x in xrange(10)]),
@@ -16,9 +16,9 @@ class RankingImageTask(AbstractTask):
         }
 
     @task("/workflow/<workflow_id>/RankingImageTask")
-    def post(self, **kwargs):
-        rating = int(self.crowd_request.get_form()["rating"])
-        img_filename = self.crowd_request.get_form()['image-filename']
+    def post(self, crowd_request, data, form, **kwargs):
+        rating = int(form["rating"])
+        img_filename = form['image-filename']
         if rating != None:
             with open(RESULTS_FILE, "r+") as f:
                 results = json.loads(f.read())
@@ -32,7 +32,7 @@ class RankingImageTask(AbstractTask):
 
 class PickTweetHashtagsTask(AbstractTask):
     @task("/workflow/<workflow_id>/PickTweetHashtagsTask")
-    def get(self, **kwargs):
+    def get(self, crowd_request, data, **kwargs):
         try:
             # import ipdb; ipdb.set_trace()
             tso = TwitterSearchOrder() # create a TwitterSearchOrder object
@@ -54,12 +54,12 @@ class PickTweetHashtagsTask(AbstractTask):
         return {"status": "OK", "tweet_id": tweet_id, "template": "pick_tweet_hashtags.html"}
 
     @task("/workflow/<workflow_id>/PickTweetHashtagsTask")
-    def post(self, **kwargs):
+    def post(self, crowd_request, data, form, **kwargs):
         return {"status": "OK", "path": "/"}
 
 class AnswerQuestionsTask(AbstractTask):
     @task("/workflow/<workflow_id>/AnswerQuestionsTask")
-    def get(self, **kwargs):
+    def get(self, crowd_request, data, **kwargs):
         return {
             "status": "OK",
             "img": random.choice(["img" + str(x) + ".jpeg" for x in xrange(10)]),
@@ -67,9 +67,9 @@ class AnswerQuestionsTask(AbstractTask):
         }
 
     @task("/workflow/<workflow_id>/AnswerQuestionsTask")
-    def post(self, **kwargs):
-        answer = self.crowd_request.get_form()["answer"]
-        img_filename = self.crowd_request.get_form()['image-filename']
+    def post(self, crowd_request, data, form, **kwargs):
+        answer = form["answer"]
+        img_filename = form['image-filename']
         if answer != None:
             with open(RESULTS_FILE, "r+") as f:
                 results = json.loads(f.read())

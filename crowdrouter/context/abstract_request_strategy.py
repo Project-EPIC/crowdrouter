@@ -28,10 +28,12 @@ class AbstractRequestStrategy:
         #Request MUST exist.
         if request == None:
             raise NoRequestFoundError
+
         #Sessions MUST be turned ON.
         if session == None:
             if not hasattr(request, "session") or request.session == None:
                 raise NoSessionFoundError
+
         #These are required Request paramters.
         if not request.method:
             raise InvalidRequestError(value="Request parameter 'method' is required.")

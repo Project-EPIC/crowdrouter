@@ -21,10 +21,24 @@ def task(task_uri):
             if path != self.crowd_request.get_path():
                 raise TaskError(value="Task URI '%s' does not match CrowdRequest URI '%s'." % (path, self.crowd_request.get_path()))
 
-            response = run_func(self, **kwargs) #Run the Task.
+            #Run the Task.
+            method = self.crowd_request.get_method()
+            if method == "GET":
+                response = run_func(self, self.crowd_request, self.crowd_request.get_data(), **kwargs)
+            else:
+                response = run_func(self, self.crowd_request, self.crowd_request.get_data(), self.crowd_request.get_form(), **kwargs)
+
             if not response.get("path"):
                 response["path"] = path
-            return CrowdResponse(response, self)
+
+            #Craft the Crowd Response.
+            crowd_response = CrowdResponse(response, self)
+
+            #If Crowd Statistics Gathering is turned ON.
+            cr = self.workflow.crowdrouter
+            if isinstance(cr.crowd_stats, CrowdStats):
+                cr.update_crowd_statistics(self.workflow, crowd_response)
+            return crowd_response
 
         #Each Task exec function must have a string URI value that maps its action to a URI.
         if not isinstance(task_uri, str) and not callable(run_func):
@@ -47,6 +61,8 @@ def workflow(run_func):
                 raise NoTaskFoundError
         except:
             raise NoTaskFoundError(value="Task %s not found. Ensure that the underlying Workflow class has declared this instance." % crowd_request.task_name)
+
+        #Run the WorkFlow.
         return run_func(self, task)
     return _wrapper
 
@@ -75,10 +91,6 @@ def crowdrouter(run_func):
 
             if not isinstance(response, CrowdResponse): #Ensure a CrowdResponse is returned.
                 raise TypeError("CrowdRouter must return a CrowdResponse instance.")
-
-            #If Crowd Statistics Gathering is turned ON.
-            if isinstance(self.crowd_stats, CrowdStats):
-                self.update_crowd_statistics(workflow, response)
 
             return response
         except CrowdRouterError as e:
