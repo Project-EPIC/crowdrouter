@@ -15,6 +15,9 @@ layout: default
 
 <section id="cr-intro">
   <div class='column-group'>
+    <div class='all-30'>
+      <img src='/assets/images/cr-class-diagram.png'/>
+    </div>
     <div class='all-70'>
       <ul class='unstyled' id='cr-intro-list'>
         <li>
@@ -30,12 +33,10 @@ layout: default
         <li>
           <b>Web Framework-Friendly</b>
           <p>The CrowdRouter fits snuggly in your favorite Python web framework. Just plug and play.</p>
-        </li>        
+        </li>
       </ul>
     </div>
-    <div class='all-30'>
-      <img src='/assets/images/cr-class-diagram.png'/>
-    </div>
+
   </div>
 </section>
 
@@ -54,7 +55,7 @@ layout: default
           def route(self, crowd_request, workflow):
               return workflow.run(crowd_request)
       </code></pre>
-    </div>    
+    </div>
   </div>
 
   <div class="column-group">
@@ -71,13 +72,13 @@ layout: default
     </div>
     <div id='cr-code-text' class="all-45">
       Then, create as many WorkFlow classes as desired to accurately capture the work that you want your workers to perform.
-    </div>              
+    </div>
   </div>
 
   <div class="column-group">
     <div id='cr-code-text' class="all-45">
       Write out your task definitions as Task classes. Treat them like RESTful endpoints.
-    </div>     
+    </div>
 
     <div class="all-55">
       <pre class='pre-python'><code class="python">
@@ -90,8 +91,8 @@ layout: default
           def post(self):
               return {"status": "OK", "path":"/"}
       </code></pre>
-    </div>   
-  </div>  
+    </div>
+  </div>
 
   <div class="column-group">
     <div class="all-65">
@@ -104,16 +105,14 @@ layout: default
     </div>
     <div id='cr-code-text' class="all-35">
       Now, plug it in to your controllers. Make sure you enabled sessions, and call the right WorkFlow and Task for the right endpoint.
-    </div>            
-  </div>    
+    </div>
+  </div>
 </section>
 
 <section id='cr-download'>
   <h4> Through Pip </h4>
   <pre ><code class="python">
   pip install crowdrouter
-  </code></pre>  
+  </code></pre>
   <h4> Or just <a href="https://github.com/project-epic/crowdrouter">download from GitHub</a>.</h4>
 </section>
-
-

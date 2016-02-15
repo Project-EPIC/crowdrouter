@@ -37,21 +37,18 @@ $on-laptop:        800px;
 }
 
 #cr-banner {
-  padding:10vh; 
+  padding:10vh;
   height:50vh;
   background-image:url(/assets/images/banner.png);
 }
 
 #cr-intro {
-
-  width:870px;
+  padding:20px;
   margin:0 auto;
 }
 
 #cr-intro-list {
-  width:870px;
   margin:0 auto;
-  padding:20px;
 }
 
 #cr-intro-list li{
@@ -61,6 +58,9 @@ $on-laptop:        800px;
 #cr-code {
   padding:20px;
   background-image:url(/assets/images/banner.png);
+}
+#cr-code .column-group {
+  margin:30px;
 }
 
 #cr-code-text {
