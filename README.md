@@ -28,7 +28,7 @@ class MyCrowdRouter(AbstractCrowdRouter):
 		return workflow.run(crowd_request)
 ```
 
-Here's a simple WorkFlow that accepts any request.
+Here's a simple WorkFlow that accepts any request and performs the right task:
 
 ```python
 class MatchingWorkFlow(AbstractWorkFlow):
@@ -40,7 +40,7 @@ class MatchingWorkFlow(AbstractWorkFlow):
 		return task.execute() #Execute the task normally.
 ```
 
-And here's TestTask1:
+And here's the MatchTask:
 
 ```python
 class MatchTask(AbstractTask):
@@ -52,7 +52,7 @@ class MatchTask(AbstractTask):
 		return {"status": "OK", "msg": "TEST [POST]"}
 ```
 
-That's it! Just globally initialize `crowdrouter = TestCrowdRouter()` and you're good to go. Try putting your CrowdRouter instance in various controller actions and re-organize those actions into Task instances:
+That's it! Just globally initialize `crowdrouter = MyCrowdRouter()` and you're good to go. Try putting your CrowdRouter instance in various controller actions and re-organize those actions into Task instances:
 
 ```python
 def perform_task(request, task_name):
