@@ -2,11 +2,6 @@
 # Only the main Sass file needs front matter (the dashes are enough)
 ---
 @charset "utf-8";
-@font-face {
-  font-family:abelincoln;
-  src: url(/assets/css/fonts/AbrahamLincoln.ttf);
-}
-
 
 // Our variables
 $base-font-family: Helvetica, Arial, sans-serif;
@@ -39,7 +34,6 @@ $on-laptop:        800px;
 #cr-banner {
   padding:10vh;
   height:50vh;
-  background-image:url(/assets/images/banner.png);
 }
 
 #cr-intro {
@@ -57,7 +51,6 @@ $on-laptop:        800px;
 
 #cr-code {
   padding:20px;
-  background-image:url(/assets/images/banner.png);
 }
 #cr-code .column-group {
   margin:30px;
