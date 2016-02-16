@@ -19,24 +19,21 @@ There are three components:
 Here's a simple CrowdRouter:
 
 ```python
-class TestCrowdRouter(AbstractCrowdRouter):
+class MyCrowdRouter(AbstractCrowdRouter):
 	def __init__(self):
-		self.workflows = [TestWorkFlow] #Put in workflow classes here.
-		self.task_counts = {} #Initialize as-is to keep track of task counts.
+		self.workflows = [MatchingWorkFlow] #Put in workflow classes here.
 		
 	@crowdrouter
 	def route(self, crowd_request, workflow):
-		crowd_response = workflow.run(crowd_request)
-		self.update_task_count(workflow, crowd_response)
-		return crowd_response
+		return workflow.run(crowd_request)
 ```
 
 Here's a simple WorkFlow that accepts any request.
 
 ```python
-class TestWorkFlow(AbstractWorkFlow):
+class MatchingWorkFlow(AbstractWorkFlow):
 	def __init__(self):
-		tasks = [TestTask1, TestTask2] #Put Task classes here.
+		tasks = [MatchTask, ConfirmMatchTask] #Put Task classes here.
 	
 	@workflow
 	def run(self, task):
@@ -46,7 +43,7 @@ class TestWorkFlow(AbstractWorkFlow):
 And here's TestTask1:
 
 ```python
-class TestTask1(AbstractTask):
+class MatchTask(AbstractTask):
 	@task
 	def get(self):
 		return {"status": "OK", "msg": "TEST [GET]"}
@@ -60,7 +57,7 @@ That's it! Just globally initialize `crowdrouter = TestCrowdRouter()` and you're
 ```python
 def perform_task(request, task_name):
 	...
-	crowdrouter.route("TestWorkFlow", task_name, request, session)
+	crowdrouter.route("MatchingWorkFlow", task_name, request, session)
 	...
 	
 ```
