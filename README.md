@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/Project-EPIC/crowdrouter.png?label=ready&title=Ready)](https://waffle.io/Project-EPIC/crowdrouter)
 # crowdrouter
 Tired of having messy crowdsourcing code? Ever thought about swapping in a new task or workflow for an old one but felt reluctant about how much refactoring that would cause? Ever wish you could separate crowdsourcing from your app in general?
 
