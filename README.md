@@ -67,7 +67,7 @@ The crowdrouter will do the work in converting these arguments into a CrowdReque
 
 #Contributing
 
-Please do. There's a Waffle board set up that has a few tasks, but more conceptualization/architecting is always appreciated. Just ping me.
+Please do. There's a [Waffle board](https://waffle.io/Project-EPIC/crowdrouter) set up that has a few tasks, but more conceptualization/architecting is always appreciated. Just ping me.
 
 ##Questions?
 Email me at mario dot barrenechea at colorado dot edu.
