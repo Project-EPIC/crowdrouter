@@ -65,5 +65,9 @@ def perform_task(request, task_name):
 The crowdrouter will do the work in converting these arguments into a CrowdRequest that will get properly routed to the specified Task in the specified WorkFlow. 
 
 
+#Contributing
+
+Please do. There's a Waffle board set up that has a few tasks, but more conceptualization/architecting is always appreciated. Just ping me.
+
 ##Questions?
 Email me at mario dot barrenechea at colorado dot edu.
