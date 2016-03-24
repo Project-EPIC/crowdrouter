@@ -1,93 +1,83 @@
 from context import CrowdRequest
 from context import CrowdResponse
+from context import AbstractRequestStrategy
 from utils import *
 from errors import *
 from crowd_stats import CrowdStats
 import ipdb
 
+def choice(choice_func):
+    def _wrapper(self, crowd_response):
+        import ipdb; ipdb.set_trace()
+        task = choice_func(crowd_response)
+        if task in [self.t1, self.t2]:
+            return task
+        else:
+            raise CrowdChoiceError(value="Invalid return type for %s.choice(). Please use either %s or %s." % (self, self.t1, self.t2))
+    return _wrapper
+
 #Task Decorator
-def task(task_uri):
-    def task_decorator(run_func):
-        def _wrapper(self, **kwargs):
-            print_msg("@task called for %s." % self)
-            if self.auth_required == True:
-                if not self.is_authenticated(self.crowd_request): #If Authentication is Turned ON.
-                    raise AuthenticationError(value="Authentication failed for this request through Task %s." % self)
+def task(run_func):
+    def _wrapper(self, crowd_request, **kwargs):
+        print_msg("@task called for %s." % self)
+        if self.auth_required == True:
+            if not self.is_authenticated(crowd_request): #If Authentication is Turned ON.
+                raise AuthenticationError(value="Authentication failed for this request through Task %s." % self)
 
-            #Resolve Task URI with CrowdRequest params.
-            path = resolve_task_uri(task_uri, self.crowd_request)
+        #Run the Task.
+        if crowd_request.get_method() == "GET":
+            response = run_func(self, crowd_request, crowd_request.get_data(), **kwargs)
+        else:
+            response = run_func(self, crowd_request, crowd_request.get_data(), crowd_request.get_form(), **kwargs)
 
-            #URI and Path must check out.
-            if path != self.crowd_request.get_path():
-                raise TaskError(value="Task URI '%s' does not match CrowdRequest URI '%s'." % (path, self.crowd_request.get_path()))
+        #Craft the Crowd Response.
+        crowd_response = CrowdResponse(response, crowd_request, self)
 
-            #Run the Task.
-            method = self.crowd_request.get_method()
-            if method == "GET":
-                response = run_func(self, self.crowd_request, self.crowd_request.get_data(), **kwargs)
-            else:
-                response = run_func(self, self.crowd_request, self.crowd_request.get_data(), self.crowd_request.get_form(), **kwargs)
-
-            if not response.get("path"):
-                response["path"] = path
-
-            #Craft the Crowd Response.
-            crowd_response = CrowdResponse(response, self)
-
-            #If Crowd Statistics Gathering is turned ON.
-            cr = self.workflow.crowdrouter
-            if isinstance(cr.crowd_stats, CrowdStats):
-                cr.update_crowd_statistics(self.workflow, crowd_response)
-            return crowd_response
-
-        #Each Task exec function must have a string URI value that maps its action to a URI.
-        if not isinstance(task_uri, str) and not callable(run_func):
-            raise TaskError(value="Invalid Task URI value. Please check that Task %s has a URI value in its declaration." % run_func.get_name())
-        return _wrapper
-    return task_decorator
+        #If Crowd Statistics Gathering is turned ON.
+        cr = self.workflow.crowdrouter
+        if isinstance(cr.crowd_stats, CrowdStats):
+            cr.update_crowd_statistics(crowd_response)
+        return crowd_response
+    return _wrapper
 
 #Workflow Decorator
 def workflow(run_func):
-    def _wrapper(self, crowd_request):
+    def _wrapper(self, crowd_request, **kwargs):
         print_msg("@workflow called for %s." % self)
         if self.auth_required == True:
             if not self.is_authenticated(crowd_request): #If Authentication is Turned ON.
                 raise AuthenticationError(value="Authentication failed for this request through WorkFlow %s." % self)
-
-        tasks = {task.__name__:task for task in self.tasks}
-        try:
-            task = tasks.get(crowd_request.task_name)(crowd_request, self)
-            if task == None: #Type Checking for the Task instance.
-                raise NoTaskFoundError
-        except:
-            raise NoTaskFoundError(value="Task %s not found. Ensure that the underlying Workflow class has declared this instance." % crowd_request.task_name)
-
         #Run the WorkFlow.
-        return run_func(self, task)
+        return run_func(self, crowd_request.task, crowd_request)
     return _wrapper
 
 #CrowdRouter Decorator
 def crowdrouter(run_func):
-    def _wrapper(self, workflow_name, task_name, request, session=None, **kwargs):
+    def _wrapper(self, workflow, task=None, request=None, session=None, **kwargs):
         try:
             print_msg("@crowdrouter called for %s" % self)
-            workflows = {workflow.__name__:workflow for workflow in self.workflows}
+            #Create a proper request strategy.
+            request_strategy = AbstractRequestStrategy.factory(request, session, **kwargs)
 
-            try: #Realize the WorkFlow.
-                workflow = workflows.get(workflow_name)(self)
-                if workflow == None:
-                    raise NoWorkFlowFoundError
-            except:
-                raise NoWorkFlowFoundError(value="Workflow %s not found. Ensure that the underlying CrowdRouter class has declared this instance." % workflow_name)
+            #Realize the WorkFlow object.
+            workflow = realize_workflow(workflow, self)
+
+            #Realize the Task object - accommodate pipeline-based Task instances.
+            if task == None and request_strategy.session.get(SESSION_PIPELINE_KEY):
+                from workflow.crowd_pipeline import CrowdPipeline
+                task = CrowdPipeline.get_task_by_pipeline_key(workflow, request_strategy.session[SESSION_PIPELINE_KEY])
+            task = realize_task(task, workflow)
 
             #Craft the CrowdRequest object.
-            crowd_request = CrowdRequest.factory(workflow_name, task_name, request, session, **kwargs)
+            crowd_request = CrowdRequest.factory(workflow, task, request_strategy, request, session, **kwargs)
 
             #If Authentication is Turned ON.
             if self.auth_required == True:
                 if not self.is_authenticated(crowd_request):
                     raise AuthenticationError(value="Authentication failed for this request through CrowdRouter %s." % self)
-            response = run_func(self, crowd_request, workflow) #Run the Route.
+
+            #Run the Route.
+            response = run_func(self, workflow, crowd_request)
 
             if not isinstance(response, CrowdResponse): #Ensure a CrowdResponse is returned.
                 raise TypeError("CrowdRouter must return a CrowdResponse instance.")

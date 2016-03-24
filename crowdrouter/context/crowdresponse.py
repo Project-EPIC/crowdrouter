@@ -9,16 +9,16 @@ class CrowdResponse(object):
     response = None
     path = None
 
-    def __init__(self, response, task):
+    def __init__(self, response, crowd_request, task):
         try:
             self.task = task
-            self.crowd_request = task.crowd_request
-            self.method = self.crowd_request.get_method()
+            self.crowd_request = crowd_request
+            self.method = crowd_request.get_method()
             self.response = response
-            self.status = response["status"]
-            self.path = response["path"]
+            self.status = response.get("status")
+            self.path = response.get("path")
         except:
-            raise ImproperResponseError(value="Required parameter not found. Ensure that CrowdResponse contains both 'status' and 'path'.")
+            raise ImproperResponseError(value="Invalid Response.")
 
     def __repr__(self):
         return "<CrowdResponse: %s-%s-%s>" % (self.task.get_name(), self.crowd_request.get_method(), self.status)

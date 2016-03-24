@@ -8,7 +8,7 @@
     <div id="disaster-image" style="margin: 20px auto;">
       <img src="/static/images/{{ response.img }}" style="height:400px;">
     </div>
-    <form method="POST" action="/{{ workflow }}/AnswerQuestionsTask">
+    <form method="POST" action="/{{ response.controller_action }}">
       <legend> What is shown in this image? </legend>
       <input name="answer" type="text" width="400">
       <input type="hidden" name="image-filename" value="{{ response.img }}">

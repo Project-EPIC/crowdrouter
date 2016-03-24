@@ -12,7 +12,7 @@
   <div id='task'>
     <div id="disaster-tweet" style="margin: 20px auto;"></div>
 
-    <form method="POST" action="/{{ workflow }}/PickTweetHashtagsTask">
+    <form method="POST" action="/{{ response.controller_action }}">
       <h4> What hashtags appear on this tweet?</h4>
       <legend>(Separate by Commas, Leave Blank if None, Refresh if desired) </legend>
       <input name="answer" type="text" width="600" autofocus="true" style="margin:10px;">

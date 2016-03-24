@@ -37,8 +37,6 @@ class AbstractRequestStrategy:
         #These are required Request paramters.
         if not request.method:
             raise InvalidRequestError(value="Request parameter 'method' is required.")
-        if not request.path:
-            raise InvalidRequestError(value="Request parameter 'path' is required.")
 
         if clazz == "LocalProxy":
             strategy = FlaskRequestStrategy(request, session)

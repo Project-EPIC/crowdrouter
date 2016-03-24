@@ -59,3 +59,4 @@ bin
 MANIFEST
 crowd_statistics.db
 test_crowd_statistics.db
+_site

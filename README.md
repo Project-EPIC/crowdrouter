@@ -2,15 +2,15 @@
 # crowdrouter
 Tired of having messy crowdsourcing code? Ever thought about swapping in a new task or workflow for an old one but felt reluctant about how much refactoring that would cause? Ever wish you could separate crowdsourcing from your app in general?
 
-Enter the **crowdrouter**, a developer framework for architecting tasks to the crowd. Plug it in to your favorite Python web framework and go. Implement crowd workflows and tasks as first-class objects, and then route them using the CrowdRouter object. Create task pipelines that connect tasks together to provide a fluid tasking environment. 
+Enter the **crowdrouter**, a developer framework for architecting tasks to the crowd. Plug it in to your favorite Python web framework and go. Implement crowd workflows and tasks as first-class objects, and then route them using the CrowdRouter object. Create task pipelines that connect tasks together to provide a fluid tasking environment.
 
 Basically, the crowdrouter is designed to get you thinking about crowdsourcing as a module rather than spaghetti code.
 
 ## How it works
 
-There are three components: 
+There are three components:
 
-**CrowdRouter**: guards and passes client requests, keeping track of crowd statistics such as number of allowable requests, whitelists and blacklists to check against, task counts, and more. Your own CrowdRouter instance defines which WorkFlow instances it can pass requests to. 
+**CrowdRouter**: guards and passes client requests, keeping track of crowd statistics such as number of allowable requests, whitelists and blacklists to check against, task counts, and more. Your own CrowdRouter instance defines which WorkFlow instances it can pass requests to.
 
 **WorkFlow**: handles the template for how crowdwork is performed. For example, Task A needs to always happen before Task B. Task C can be executed by anyone, anytime. Task D, however, requires authentication. Multiple WorkFlows instances means that your web application needs coordinated crowdsourcing for various use cases.
 
@@ -22,7 +22,7 @@ Here's a simple CrowdRouter:
 class MyCrowdRouter(AbstractCrowdRouter):
 	def __init__(self):
 		self.workflows = [MatchingWorkFlow] #Put in workflow classes here.
-		
+
 	@crowdrouter
 	def route(self, crowd_request, workflow):
 		return workflow.run(crowd_request)
@@ -34,7 +34,7 @@ Here's a simple WorkFlow that accepts any request and performs the right task:
 class MatchingWorkFlow(AbstractWorkFlow):
 	def __init__(self):
 		tasks = [MatchTask, ConfirmMatchTask] #Put Task classes here.
-	
+
 	@workflow
 	def run(self, task):
 		return task.execute() #Execute the task normally.
@@ -59,14 +59,13 @@ def perform_task(request, task_name):
 	...
 	crowdrouter.route("MatchingWorkFlow", task_name, request, session)
 	...
-	
+
 ```
 
-The crowdrouter will do the work in converting these arguments into a CrowdRequest that will get properly routed to the specified Task in the specified WorkFlow. 
+The crowdrouter will do the work in converting these arguments into a CrowdRequest that will get properly routed to the specified Task in the specified WorkFlow.
 
 
-#Contributing
-
+##Contributing
 Please do. There's a [Waffle board](https://waffle.io/Project-EPIC/crowdrouter) set up that has a few tasks, but more conceptualization/architecting is always appreciated. Just ping me.
 
 ##Questions?

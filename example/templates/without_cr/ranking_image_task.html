@@ -8,7 +8,7 @@
     <div id="disaster-image" style="margin: 20px auto;">
       <img src="/static/images/{{ response.img }}" style="height:400px;">
     </div>
-    <form method="POST" action="/{{ workflow }}/RankingImageTask">
+    <form method="POST" action="/{{ response.controller_action }}">
       <input type="radio" name="rating" value="0" checked> None
       <input id="ranking-images-button" type="radio" name="rating" value="1"> Light
       <input id="ranking-images-button" type="radio" name="rating" value="2"> Moderate

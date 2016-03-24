@@ -34,16 +34,19 @@ class AbstractCrowdRouter:
 
     @abstractmethod
     @crowdrouter
-    def route(self, crowd_request, workflow, **kwargs):
-        return workflow.run(crowd_request, kwargs)
+    def route(self, workflow, crowd_request, **kwargs):
+        return workflow.run(crowd_request, **kwargs)
+
+    def pipeline(self, workflow, request, session=None, **kwargs):
+        return self.route(workflow, task=None, request=request, session=session, **kwargs)
 
     #Method to initialize crowd stats.
     def enable_crowd_statistics(self, db_path):
         self.crowd_stats = CrowdStats(db_path, self.workflows)
 
     #Update Crowd Stats.
-    def update_crowd_statistics(self, workflow, crowd_response):
-        self.crowd_stats.update(workflow, crowd_response)
+    def update_crowd_statistics(self, crowd_response):
+        self.crowd_stats.update(crowd_response)
 
     #Report Crowd Stats.
     def report_crowd_statistics(self):

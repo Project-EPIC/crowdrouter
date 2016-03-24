@@ -1,1 +1,1 @@
-__all__ = ["abstract_workflow"]
+__all__ = ["abstract_workflow", "crowd_pipeline"]

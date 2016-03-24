@@ -38,31 +38,23 @@
       </form>
     {% endif %}
 
-    <a href="/stats" class="btn btn-primary" style="margin:10px;">Check out Crowd Stats</a>
+      <br/>
+      <h4>Perform a Single Task</h4>
+      <a href="/rank_image"> Rank an Image.</a>
+      <a href="/answer_question"> Answer a Question.</a>
+      <a href="/pick_tweet_hashtags"> Pick Tweet Hashtags.</a>
 
-      {% for workflow in workflows %}
-        <br/>
-        <h4>{{ workflow.__name__ }}</h4>
-        <table class="table-light overflow-hidden bg-white rounded" style="margin:10px; width:1000px;">
-          <thead class="bg-darken-1">
-            <th style="width:200px;">Name</th>
-          </thead>
-          <tbody>
-            {% for task in workflow.tasks %}
-              <tr>
-                {% if task.__name__ == "RankingImageTask" %}
-                  <td><a href="/{{ workflow.__name__ }}/{{ task.__name__ }}">Rank an Image</a></td>
-                {% elif task.__name__ == "AnswerQuestionsTask" %}
-                  <td><a href="/{{ workflow.__name__ }}/{{ task.__name__ }}">Answer a Question</a></td>
-                {% elif task.__name__ == "PickTweetHashtagsTask" %}
-                  <td><a href="/{{ workflow.__name__ }}/{{ task.__name__ }}">Pick Tweet Hashtags</a></td>
-                {% else %}
-                {% endif %}
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      {% endfor %}
+      <h4>Perform Multple Tasks</h4>
+      <a href="/rank_multiple_images"> Rank Multiple Images.</a>
+      <a href="/answer_multiple_questions"> Answer Multiple Questions.</a>
+      <a href="/mixed_workflow_1"> Start Mixed workflow.</a>
+      <a href="/choice/1"> Start Choicing Workflow. </a>
+
+      <h4>Perform Authenticated Tasks</h4>
+      <a href="/auth_rank_image"> Rank an Image.</a>
+      <a href="/auth_answer_question"> Answer a Question.</a>
+      <a href="/auth_pick_tweet_hashtags"> Pick Tweet Hashtags.</a>
+
     {% endblock body %}
   </body>
 </html>

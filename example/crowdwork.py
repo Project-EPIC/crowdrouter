@@ -1,13 +1,14 @@
 import os, sys, ipdb
-sys.path.append("../dist/crowdrouter-1.5.3")
+sys.path.append("../dist/crowdrouter-1.5.4")
 from crowdrouter import AbstractCrowdRouter, AbstractWorkFlow, AbstractTask
 from crowdrouter.decorators import *
+from crowdrouter.task.abstract_crowd_choice import AbstractCrowdChoice
 from TwitterSearch import *
 import random, ipdb, json
 RESULTS_FILE = "results.json"
 
 class RankingImageTask(AbstractTask):
-    @task("/workflow/<workflow_id>/RankingImageTask")
+    @task
     def get(self, crowd_request, data, **kwargs):
         return {
             "status": "OK",
@@ -15,7 +16,7 @@ class RankingImageTask(AbstractTask):
             "template": "ranking_image_task.html"
         }
 
-    @task("/workflow/<workflow_id>/RankingImageTask")
+    @task
     def post(self, crowd_request, data, form, **kwargs):
         rating = int(form["rating"])
         img_filename = form['image-filename']
@@ -31,7 +32,7 @@ class RankingImageTask(AbstractTask):
             return {"status":"fail"}
 
 class PickTweetHashtagsTask(AbstractTask):
-    @task("/workflow/<workflow_id>/PickTweetHashtagsTask")
+    @task
     def get(self, crowd_request, data, **kwargs):
         try:
             # import ipdb; ipdb.set_trace()
@@ -39,10 +40,10 @@ class PickTweetHashtagsTask(AbstractTask):
             tso.set_keywords(['earthquake']) # let's define all words we would like to have a look for
             tso.set_include_entities(False) # and don't give us all those entity information
             ts = TwitterSearch(
-                consumer_key = '',
-                consumer_secret = '',
-                access_token = '',
-                access_token_secret = ''
+                consumer_key = 'O92NoyCEQsUq7swRKg',
+                consumer_secret = 'dD7NP6ZTOv9KX28Iw6O9gtgu5MpbzTG5qyfdd7S99Y',
+                access_token = '46171206-lfcESnE0WfZ8iCb4QEfreOco3PuLodM0p2lp3gC9s',
+                access_token_secret = 'CURU7xIS2InzDHF5LtPpZ8gLXjWg0M3okMbmCHrIWdI'
             )
 
             for tweet in ts.search_tweets_iterable(tso):
@@ -53,12 +54,12 @@ class PickTweetHashtagsTask(AbstractTask):
             print e
         return {"status": "OK", "tweet_id": tweet_id, "template": "pick_tweet_hashtags.html"}
 
-    @task("/workflow/<workflow_id>/PickTweetHashtagsTask")
+    @task
     def post(self, crowd_request, data, form, **kwargs):
         return {"status": "OK", "path": "/"}
 
 class AnswerQuestionsTask(AbstractTask):
-    @task("/workflow/<workflow_id>/AnswerQuestionsTask")
+    @task
     def get(self, crowd_request, data, **kwargs):
         return {
             "status": "OK",
@@ -66,7 +67,7 @@ class AnswerQuestionsTask(AbstractTask):
             "template": "answer_questions.html"
         }
 
-    @task("/workflow/<workflow_id>/AnswerQuestionsTask")
+    @task
     def post(self, crowd_request, data, form, **kwargs):
         answer = form["answer"]
         img_filename = form['image-filename']
@@ -88,8 +89,8 @@ class BasicWorkFlow(AbstractWorkFlow):
         self.crowdrouter = cr
 
     @workflow
-    def run(self, task):
-        return task.execute()
+    def run(self, task, crowd_request):
+        return task.execute(crowd_request)
 
 class RankingMultipleImagesWorkFlow(AbstractWorkFlow):
     tasks = [RankingImageTask]
@@ -98,8 +99,8 @@ class RankingMultipleImagesWorkFlow(AbstractWorkFlow):
         self.crowdrouter = cr
 
     @workflow
-    def run(self, task):
-        return self.repeat(task, 3)
+    def run(self, task, crowd_request):
+        return self.repeat(crowd_request, 3)
 
 class AnswerMultipleQuestionsWorkFlow(RankingMultipleImagesWorkFlow):
     tasks = [AnswerQuestionsTask]
@@ -114,8 +115,28 @@ class MixedWorkFlow(AbstractWorkFlow):
         self.crowdrouter = cr
 
     @workflow
-    def run(self, task):
-        return self.pipeline(task)
+    def run(self, task, crowd_request):
+        return self.pipeline(crowd_request)
+
+class ChoiceRankOrQuestion(AbstractCrowdChoice):
+    t1 = RankingImageTask
+    t2 = AnswerQuestionsTask
+
+    def choice(self, crowd_request):
+        if crowd_request.get_data().get("param"):
+            return self.t1
+        else:
+            return self.t2
+
+class ChoiceWorkFlow(AbstractWorkFlow):
+    tasks = [RankingImageTask, ChoiceRankOrQuestion, AnswerQuestionsTask]
+
+    def __init__(self, cr):
+        self.crowdrouter = cr
+
+    @workflow
+    def run(self, task, crowd_request):
+        return self.pipeline(crowd_request)
 
 @workflow_auth_required
 class AuthWorkFlow(BasicWorkFlow):
@@ -124,10 +145,10 @@ class AuthWorkFlow(BasicWorkFlow):
         return session.get("user") == "admin"
 
 class MyCrowdRouter(AbstractCrowdRouter):
-    workflows = [BasicWorkFlow, RankingMultipleImagesWorkFlow, AnswerMultipleQuestionsWorkFlow, MixedWorkFlow, AuthWorkFlow]
+    workflows = [BasicWorkFlow, RankingMultipleImagesWorkFlow, ChoiceWorkFlow, AnswerMultipleQuestionsWorkFlow, MixedWorkFlow, AuthWorkFlow]
     def __init__(self):
         self.enable_crowd_statistics("test_crowd_statistics.db")
 
     @crowdrouter
-    def route(self, crowd_request, workflow):
+    def route(self, workflow, crowd_request):
         return workflow.run(crowd_request)

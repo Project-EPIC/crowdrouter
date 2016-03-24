@@ -19,6 +19,13 @@ class PipelineError(CrowdRouterError):
         else:
             self.value = "Something went wrong with the Pipeline. Please try again."
 
+class CrowdChoiceError(CrowdRouterError):
+    def __init__(self, value=None):
+        if value:
+            self.value = value
+        else:
+            self.value = "Something went wrong with the CrowdChoice. Please try again."
+
 class InvalidRequestStrategyError(CrowdRouterError):
     def __init__(self, value=None):
         if value:
