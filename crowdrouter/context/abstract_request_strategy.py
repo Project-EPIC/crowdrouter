@@ -51,6 +51,8 @@ class AbstractRequestStrategy:
             strategy.data.update(kwargs)
         return strategy
 
+    def commit_session_data(self):
+        pass
 
     def __repr__(self):
         return "<%s>" % self.__class__.__name__

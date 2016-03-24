@@ -259,13 +259,13 @@ class Testing(unittest.TestCase):
         response = self.cr.route(TestWorkFlowPipelineRepeat, TestTask1, MockRequest("POST", crowd_response=response))
         response = self.cr.route(TestWorkFlowPipelineRepeat, TestTask1, MockRequest("POST", crowd_response=response))
         response = self.cr.route(TestWorkFlowPipelineRepeat, TestTask1, MockRequest("POST", crowd_response=response))
-        self.assertTrue(response.crowd_request.get_session()[SESSION_PIPELINE_KEY] == {})
+        self.assertTrue(response.crowd_request.get_session()[SESSION_PIPELINE_KEY] == None)
         #Now, do it again.
         response = self.cr.route(TestWorkFlowPipelineRepeat, TestTask1, MockRequest("GET"))
         response = self.cr.route(TestWorkFlowPipelineRepeat, TestTask1, MockRequest("POST", crowd_response=response))
         response = self.cr.route(TestWorkFlowPipelineRepeat, TestTask1, MockRequest("POST", crowd_response=response))
         response = self.cr.route(TestWorkFlowPipelineRepeat, TestTask1, MockRequest("POST", crowd_response=response))
-        self.assertTrue(response.crowd_request.get_session()[SESSION_PIPELINE_KEY] == {})
+        self.assertTrue(response.crowd_request.get_session()[SESSION_PIPELINE_KEY] == None)
 
     def test_task_extra_request_data_packaged(self):
         self.cr.workflows = [TestWorkFlowURI]
@@ -512,8 +512,22 @@ class Testing(unittest.TestCase):
     def test_workflow_pipeline_consecutive_choices(self):
         pass
 
+    def test_workflow_guarded_tasks(self):
+        self.cr.workflows = [TestWorkFlowGuardedTasks]
+        response = self.cr.pipeline(TestWorkFlowGuardedTasks, MockRequest("GET"))
+        response = self.cr.pipeline(TestWorkFlowGuardedTasks, MockRequest("POST", crowd_response=response))
+        self.assertTrue(response.task.__class__ == TestTaskGuard1)
+        self.assertTrue(response.crowd_request.get_session()[SESSION_DATA_KEY]['param1'] == 10)
+        self.assertTrue(response.method == "GET")
+        self.assertTrue(response.crowd_request.get_session()["modified"] == True)
 
-
+        response = self.cr.pipeline(TestWorkFlowGuardedTasks, MockRequest("GET", crowd_response=response))
+        response = self.cr.pipeline(TestWorkFlowGuardedTasks, MockRequest("POST", crowd_response=response))
+        self.assertTrue(response.task.__class__ == TestTaskGuard1)
+        self.assertTrue(response.method == "POST")
+        self.assertTrue(response.crowd_request.get_session()[SESSION_DATA_KEY] == None)
+        self.assertTrue(response.crowd_request.get_session()[SESSION_PIPELINE_KEY] == None)
+        self.assertTrue(response.crowd_request.get_session()["modified"] == True)
 
 
     #TODO: Test cr.pipline when there is no pipeline.

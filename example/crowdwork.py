@@ -1,5 +1,5 @@
 import os, sys, ipdb
-sys.path.append("../dist/crowdrouter-1.5.4")
+sys.path.append("../dist/crowdrouter-1.5.5")
 from crowdrouter import AbstractCrowdRouter, AbstractWorkFlow, AbstractTask
 from crowdrouter.decorators import *
 from crowdrouter.task.abstract_crowd_choice import AbstractCrowdChoice
@@ -137,6 +137,9 @@ class ChoiceWorkFlow(AbstractWorkFlow):
     @workflow
     def run(self, task, crowd_request):
         return self.pipeline(crowd_request)
+
+    def pre_pipeline(self, task, pipe_data):
+        pipe_data["param"] = True
 
 @workflow_auth_required
 class AuthWorkFlow(BasicWorkFlow):

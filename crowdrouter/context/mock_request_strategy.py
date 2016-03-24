@@ -12,3 +12,7 @@ class MockRequestStrategy(abstract_request_strategy.AbstractRequestStrategy):
             self.form = request.form or {}
         except:
             raise InvalidRequestError(value="MockRequestStrategy cannot properly bind all needed variables for request %s." % request)
+
+
+    def commit_session_data(self):
+        self.session["modified"] = True

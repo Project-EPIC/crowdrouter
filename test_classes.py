@@ -18,6 +18,7 @@ class MockRequest(object):
             self.session = crowd_response.crowd_request.get_session()
         else:
             self.session = {}
+        self.session["modified"] = False
 
 class TestTask1(AbstractTask):
     @task
@@ -113,6 +114,15 @@ class TestTaskChoice2(AbstractTask):
     def post(self, crowd_request, data, form, **kwargs):
         return {"status": "OK", "number":1}
 
+class TestTaskGuard1(AbstractTask):
+    @task
+    def get(self, crowd_request, data, **kwargs):
+        param = kwargs['pipe_data']['param1']
+        return {"status": "OK"}
+    @task
+    def post(self, crowd_request, data, form, **kwargs):
+        param = kwargs['pipe_data']['param1']
+        return {"status": "OK", "param":True}
 
 class TestWorkFlowSolo(AbstractWorkFlow):
     tasks = [TestTask1]
@@ -311,6 +321,19 @@ class TestWorkFlowConsecutiveChoices(AbstractWorkFlow):
     @workflow
     def run(self, task, crowd_request):
         return self.pipeline(crowd_request)
+
+class TestWorkFlowGuardedTasks(AbstractWorkFlow):
+    tasks = [TestTask1, TestTaskGuard1]
+
+    def __init__(self, cr):
+        self.crowdrouter = cr
+
+    @workflow
+    def run(self, task, crowd_request):
+        return self.pipeline(crowd_request)
+
+    def pre_pipeline(self, task, pipe_data):
+        pipe_data['param1'] = 10
 
 class TestCrowdRouter(AbstractCrowdRouter):
     workflows = []

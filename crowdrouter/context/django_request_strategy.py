@@ -12,3 +12,6 @@ class DjangoRequestStrategy(abstract_request_strategy.AbstractRequestStrategy):
             self.form = request.POST or request.FILES or {}
         except:
             raise InvalidRequestError(value="DjangoRequestStrategy cannot properly bind all needed variables for request %s." % request)
+
+    def commit_session_data(self):
+        self.session.modified = True

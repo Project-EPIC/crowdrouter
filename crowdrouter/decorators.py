@@ -79,6 +79,9 @@ def crowdrouter(run_func):
             #Run the Route.
             response = run_func(self, workflow, crowd_request)
 
+            #Commit Session Data if needed.
+            crowd_request.request_strategy.commit_session_data()
+
             if not isinstance(response, CrowdResponse): #Ensure a CrowdResponse is returned.
                 raise TypeError("CrowdRouter must return a CrowdResponse instance.")
 
